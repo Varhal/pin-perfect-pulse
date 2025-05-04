@@ -294,14 +294,13 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
  * @returns Дані про аудиторію у форматі JSON.
  */
 async function getAudienceData(req, supabaseClient, accountId, accessToken, adAccountId) {
-  // Кінцева точка для аналізу аудиторії змінилася і потребує ID рекламного акаунта
-  const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/targeting_options`; // Changed endpoint
+  const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/audiences`;
   const apiParams = {
-    targeting_type: 'INTERESTS', //  targeting_type instead of type
-    // Додайте інші відповідні параметри на основі документації
+    order: 'NAME'
   };
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
+
   try {
     console.log(`Виконання запиту до API Pinterest за адресою: ${finalUrl}`);
     console.log(`Використання токена: ${accessToken.substring(0, 10)}...`);
