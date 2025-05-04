@@ -1,27 +1,19 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
 };
-
-interface PinterestApiParams {
-  accountId: string;
-  endpoint: 'analytics' | 'audience' | 'profile';
-  dateRange?: {
-    startDate: string;
-    endDate: string;
-  };
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
-  
+
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -33,17 +25,18 @@ serve(async (req) => {
     if (!authHeader) {
       throw new Error('Missing Authorization header');
     }
-    
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
       throw new Error('Unauthorized');
     }
-    
+
     // Parse request body
-    const { accountId, endpoint, dateRange } = await req.json() as PinterestApiParams;
-    
+    const { accountId, endpoint, dateRange } = await req.json();
+
     // Fetch the account data from Supabase
     const { data: accountData, error: accountError } = await supabaseClient
       .from('pinterest_accounts')
@@ -51,35 +44,41 @@ serve(async (req) => {
       .eq('id', accountId)
       .eq('user_id', user.id)
       .single();
-      
     if (accountError || !accountData) {
       throw new Error('Pinterest account not found');
     }
-    
+
     // Get access token using the account's API key
     const accessToken = accountData.api_key;
     const appId = accountData.app_id;
-    
     let apiUrl = '';
     let apiParams = {};
-    
+
     // Determine which endpoint to call
-    switch(endpoint) {
+    switch (endpoint) {
       case 'analytics':
         apiUrl = `https://api.pinterest.com/v5/ad_accounts/${appId}/analytics`;
         apiParams = {
           start_date: dateRange?.startDate || getDefaultStartDate(),
           end_date: dateRange?.endDate || getCurrentDate(),
           granularity: 'DAY',
-          metrics: ['IMPRESSION', 'ENGAGEMENT', 'PIN_CLICK', 'OUTBOUND_CLICK', 'SAVE', 'TOTAL_AUDIENCE', 'ENGAGED_AUDIENCE'],
-          report_attribution_type: 'ORGANIC'
+          metrics: [
+            'IMPRESSION',
+            'ENGAGEMENT',
+            'PIN_CLICK',
+            'OUTBOUND_CLICK',
+            'SAVE',
+            'TOTAL_AUDIENCE',
+            'ENGAGED_AUDIENCE',
+          ].join(','), // Convert metrics array to comma-separated string
+          report_attribution_type: 'ORGANIC',
         };
         break;
       case 'audience':
         apiUrl = `https://api.pinterest.com/v5/ad_accounts/${appId}/audience_insights/interests`;
         apiParams = {
           audience_type: 'ENGAGED',
-          format: "PERCENTAGE"
+          format: 'PERCENTAGE',
         };
         break;
       case 'profile':
@@ -89,7 +88,13 @@ serve(async (req) => {
       default:
         throw new Error('Invalid endpoint');
     }
-    
+
+    // Construct the URL with query parameters for GET requests
+    if (endpoint !== 'profile') {
+        const urlParams = new URLSearchParams(apiParams);
+        apiUrl += `?${urlParams.toString()}`;
+    }
+
     // Make the request to Pinterest API
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -97,39 +102,47 @@ serve(async (req) => {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: endpoint !== 'profile' ? JSON.stringify(apiParams) : undefined,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Pinterest API error:', errorData);
       throw new Error(`Pinterest API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     // Return the data
     return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
     });
-    
   } catch (error) {
     console.error('Error processing request:', error);
-    
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+      }),
+      {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
 });
 
 // Helper functions
-function getCurrentDate(): string {
+function getCurrentDate() {
   const today = new Date();
   return today.toISOString().split('T')[0];
 }
 
-function getDefaultStartDate(): string {
+function getDefaultStartDate() {
   const date = new Date();
   date.setDate(date.getDate() - 30);
   return date.toISOString().split('T')[0];
