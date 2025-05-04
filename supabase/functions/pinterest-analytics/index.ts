@@ -141,9 +141,9 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
  */
 async function getAudienceData(req, supabaseClient, accountId, accessToken, adAccountId) {
   // Кінцева точка для аналізу аудиторії змінилася і потребує ID рекламного акаунта
-  const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/targeting_suggestions`;
+  const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/targeting_options`; // Changed endpoint
   const apiParams = {
-    type: 'INTERESTS', // Припускаємо, що вас цікавлять інтереси
+    targeting_type: 'INTERESTS', //  targeting_type instead of type
     // Додайте інші відповідні параметри на основі документації
   };
   const urlParams = new URLSearchParams(apiParams);
