@@ -85,7 +85,7 @@ const AccountList: React.FC<AccountListProps> = ({
 
       {sortedAccounts.length === 0 ? <div className="text-center py-10">
           <p className="text-gray-500">No accounts found</p>
-        </div> : <div className="flex flex-wrap w-full ">
+        </div> : <div className="flex flex-wrap w-full gap-4">
           {sortedAccounts.map(account => <AccountCard key={account.id} account={account} />)}
         </div>}
     </div>;
