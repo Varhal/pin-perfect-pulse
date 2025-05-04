@@ -296,7 +296,7 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
 async function getAudienceData(req, supabaseClient, accountId, accessToken, adAccountId) {
   const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/audiences`;
   const apiParams = {
-    order: 'NAME'
+    order: 'ASCENDING' // Змінено на ASCENDING
   };
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
