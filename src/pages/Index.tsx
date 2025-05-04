@@ -1,13 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import Layout from '../components/layout/Layout';
+import AccountList from '../components/accounts/AccountList';
+import { mockAccounts } from '../data/mockData';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Pinterest Accounts</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor your Pinterest accounts performance
+          </p>
+        </div>
+        <AccountList accounts={mockAccounts} />
       </div>
-    </div>
+    </Layout>
   );
 };
 
