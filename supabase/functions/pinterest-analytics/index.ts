@@ -40,7 +40,7 @@ async function refreshPinterestToken(supabaseClient, accountId, refreshToken, ap
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Помилка оновлення токена:', errorData);
-      throw new Error(`Помилка оновлення токена Pinterest: ${response.status}`);
+      throw new Error(`Помилка оновлення токена Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
     const tokenData = await response.json();
     // Оновлення токенів в базі даних
@@ -65,15 +65,15 @@ async function refreshPinterestToken(supabaseClient, accountId, refreshToken, ap
 }
 
 /**
-  * Отримує аналітичні дані для акаунта Pinterest.
-  * @param req - Об'єкт HTTP запиту.
-  * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
-  * @param accountId - ID акаунта Pinterest.
-  * @param accessToken - Access токен API Pinterest.
-  * @param adAccountId - ID рекламного акаунта Pinterest.
-  * @param dateRange - Об'єкт з початковою та кінцевою датами для аналізу.
-  * @returns Аналітичні дані у форматі JSON.
-  */
+ * Отримує аналітичні дані для акаунта Pinterest.
+ * @param req - Об'єкт HTTP запиту.
+ * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
+ * @param accountId - ID акаунта Pinterest.
+ * @param accessToken - Access токен API Pinterest.
+ * @param adAccountId - ID рекламного акаунта Pinterest.
+ * @param dateRange - Об'єкт з початковою та кінцевою датами для аналізу.
+ * @returns Аналітичні дані у форматі JSON.
+ */
 async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adAccountId, dateRange) {
   // Використовуйте ad_account_id для API аналітики
   const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/analytics`;
@@ -109,9 +109,9 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       console.error('Помилка API Pinterest:', errorData);
       // Перевірте, чи це помилка аутентифікації, яку можна виправити за допомогою нового токена
       if (response.status === 401) {
-        throw new Error('Помилка аутентифікації з API Pinterest');
+        throw new Error(`Помилка аутентифікації з API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
       }
-      throw new Error(`Помилка API Pinterest: ${response.status}`);
+      throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
     return await response.json();
   } catch (error) {
@@ -126,7 +126,7 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
  * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
  * @param accountId - ID акаунта Pinterest.
  * @param accessToken - Access токен API Pinterest.
-  * @param adAccountId - ID рекламного акаунта Pinterest.
+ * @param adAccountId - ID рекламного акаунта Pinterest.
  * @returns Дані про аудиторію у форматі JSON.
  */
 async function getAudienceData(req, supabaseClient, accountId, accessToken, adAccountId) {
@@ -139,6 +139,8 @@ async function getAudienceData(req, supabaseClient, accountId, accessToken, adAc
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
   try {
+    console.log(`Виконання запиту до API Pinterest за адресою: ${finalUrl}`);
+    console.log(`Використання токена: ${accessToken.substring(0, 10)}...`);
     const response = await fetch(finalUrl, {
       method: 'GET',
       headers: {
@@ -149,7 +151,7 @@ async function getAudienceData(req, supabaseClient, accountId, accessToken, adAc
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Помилка API Pinterest:', errorData);
-      throw new Error(`Помилка API Pinterest: ${response.status}`);
+      throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
     return await response.json();
   } catch (error) {
@@ -178,7 +180,7 @@ async function getProfileData(req, supabaseClient, accessToken) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Помилка API Pinterest:', errorData);
-      throw new Error(`Помилка API Pinterest: ${response.status}`);
+      throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
     return await response.json();
   } catch (error) {
