@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PinterestLogo from '../ui/PinterestLogo';
+import AddAccountModal from '../accounts/AddAccountModal';
 
 interface SidebarProps {
   className?: string;
@@ -24,6 +25,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(true);
+  const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -31,6 +33,10 @@ const Sidebar = ({ className }: SidebarProps) => {
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+  
+  const handleAddAccountSuccess = () => {
+    setIsAddAccountModalOpen(false);
   };
 
   const navItems = [
@@ -84,6 +90,7 @@ const Sidebar = ({ className }: SidebarProps) => {
             <Button
               variant="outline"
               className="w-full mb-4 flex items-center justify-center gap-2 bg-pinterest-red text-white hover:bg-pinterest-darkred"
+              onClick={() => setIsAddAccountModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
               <span>Add account</span>
@@ -122,6 +129,13 @@ const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </div>
       </div>
+
+      {/* Add Account Modal */}
+      <AddAccountModal 
+        open={isAddAccountModalOpen} 
+        onClose={() => setIsAddAccountModalOpen(false)}
+        onSuccess={handleAddAccountSuccess}
+      />
     </>
   );
 };

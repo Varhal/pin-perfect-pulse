@@ -5,12 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AccountCard from './AccountCard';
-import { PinterestAccount } from '../../services/pinterest';
-import { useMockPinterestAccounts } from '../../data/mockData';
-
-interface AccountListProps {
-  accounts?: PinterestAccount[];
-}
+import { PinterestAccount } from '../../services/pinterest/types';
+import { useQuery } from '@tanstack/react-query';
+import { fetchPinterestAccounts } from '../../services/pinterest/accountsApi';
 
 type SortOption = {
   label: string;
@@ -48,10 +45,11 @@ const sortOptions: SortOption[] = [
   }
 ];
 
-const AccountList: React.FC<AccountListProps> = ({ accounts: propAccounts }) => {
-  // Fetch mock accounts if none are provided via props
-  const { data: mockAccounts } = useMockPinterestAccounts();
-  const accounts = propAccounts || mockAccounts || [];
+const AccountList: React.FC = () => {
+  const { data: accounts = [], isLoading, error } = useQuery({
+    queryKey: ['pinterestAccounts'],
+    queryFn: fetchPinterestAccounts,
+  });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
@@ -66,10 +64,10 @@ const AccountList: React.FC<AccountListProps> = ({ accounts: propAccounts }) => 
   const sortedAccounts = useMemo(() => {
     return [...filteredAccounts].sort((a, b) => {
       if (sortBy.value === 'createdAt-desc') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return b.createdAt.getTime() - a.createdAt.getTime();
       }
       if (sortBy.value === 'createdAt-asc') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return a.createdAt.getTime() - b.createdAt.getTime();
       }
 
       // For other metrics
@@ -80,6 +78,14 @@ const AccountList: React.FC<AccountListProps> = ({ accounts: propAccounts }) => 
       return 0;
     });
   }, [filteredAccounts, sortBy]);
+
+  if (isLoading) {
+    return <div className="text-center py-10">Loading accounts...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">Error loading accounts. Please try again.</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -118,9 +124,7 @@ const AccountList: React.FC<AccountListProps> = ({ accounts: propAccounts }) => 
       {sortedAccounts.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-500">No accounts found</p>
-          {accounts.length === 0 && (
-            <p className="mt-2 text-sm text-gray-400">Add your first Pinterest account by clicking the "Add Account" button above.</p>
-          )}
+          <p className="mt-2 text-sm text-gray-400">Add your first Pinterest account by clicking the "Add Account" button in the sidebar.</p>
         </div>
       ) : (
         <div className="flex flex-wrap w-full gap-4">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -39,6 +40,8 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,12 +54,20 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
   });
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to add an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
-      // Use type assertion to work around TypeScript limitations with dynamic table names
       const { error } = await supabase
-        .from('pinterest_accounts' as any)
+        .from('pinterest_accounts')
         .insert({
           user_id: user.id,
           name: values.name,
@@ -73,15 +84,20 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
         description: "Your Pinterest account has been added successfully.",
       });
       
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['pinterestAccounts'] });
+      
       form.reset();
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding account:', error);
       toast({
         title: "Error",
-        description: "Failed to add Pinterest account. Please try again.",
+        description: `Failed to add Pinterest account: ${error.message || 'Please try again.'}`,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -154,10 +170,12 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
             />
             
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit">Add Account</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Adding...' : 'Add Account'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
