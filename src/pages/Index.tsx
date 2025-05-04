@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Layout from '@/components/layout/Layout';
-import { AccountList } from '@/components/accounts/AccountList';
+import AccountList from '@/components/accounts/AccountList';
 
 const Index = () => {
   return (
