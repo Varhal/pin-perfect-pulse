@@ -1,12 +1,52 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import PerformanceMetrics from '../components/analytics/PerformanceMetrics';
 import MetricChart from '../components/analytics/MetricChart';
 import AudienceInsights from '../components/analytics/AudienceInsights';
-import { mockMetricData } from '../data/mockData';
+import { fetchPinterestAccounts, fetchAccountAnalytics, fetchAudienceInsights } from '../services/pinterestApi';
+import { useToast } from '@/hooks/use-toast';
 
 const Analytics = () => {
+  const [aggregatedData, setAggregatedData] = useState<any>(null);
+  const [audienceData, setAudienceData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadAnalyticsData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch all accounts
+        const accounts = await fetchPinterestAccounts();
+        
+        if (accounts.length === 0) {
+          setIsLoading(false);
+          return;
+        }
+        
+        // Get analytics for the first account (we'll aggregate in the future)
+        const firstAccountId = accounts[0].id;
+        const metricsData = await fetchAccountAnalytics(firstAccountId);
+        const insightsData = await fetchAudienceInsights(firstAccountId);
+        
+        setAggregatedData(metricsData);
+        setAudienceData(insightsData);
+      } catch (error) {
+        console.error('Error loading analytics data:', error);
+        toast({
+          title: "Error loading data",
+          description: "Failed to load analytics. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadAnalyticsData();
+  }, [toast]);
+
   const aggregatedPerformanceMetrics = [
     {
       label: 'Impressions',
@@ -56,11 +96,19 @@ const Analytics = () => {
           </p>
         </div>
 
-        <PerformanceMetrics metrics={aggregatedPerformanceMetrics} />
-        
-        <MetricChart metrics={mockMetricData} />
-        
-        <AudienceInsights />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pinterest-red"></div>
+          </div>
+        ) : (
+          <>
+            <PerformanceMetrics metrics={aggregatedPerformanceMetrics} />
+            
+            {aggregatedData && <MetricChart metrics={aggregatedData} />}
+            
+            {audienceData && <AudienceInsights audienceData={audienceData} />}
+          </>
+        )}
       </div>
     </Layout>
   );

@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { mockAudienceInsights } from '@/data/mockData';
 
 const COLORS = ['#e60023', '#0097e6', '#27ae60', '#8e44ad', '#f39c12', '#95a5a6'];
 
@@ -25,7 +24,17 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
-const AudienceInsights = () => {
+interface AudienceInsightsProps {
+  audienceData: {
+    categories: { name: string; percentage: number }[];
+    age: { group: string; percentage: number }[];
+    gender: { group: string; percentage: number }[];
+    locations: { country: string; percentage: number }[];
+    devices: { type: string; percentage: number }[];
+  };
+}
+
+const AudienceInsights: React.FC<AudienceInsightsProps> = ({ audienceData }) => {
   return (
     <div className="space-y-6">
       <Card>
@@ -44,7 +53,7 @@ const AudienceInsights = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 layout="vertical"
-                data={mockAudienceInsights.categories}
+                data={audienceData.categories}
                 margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
               >
                 <XAxis type="number" tickFormatter={(value) => `${value}%`} />
@@ -67,7 +76,7 @@ const AudienceInsights = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={mockAudienceInsights.age}
+                  data={audienceData.age}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -77,7 +86,7 @@ const AudienceInsights = () => {
                   nameKey="group"
                   label={renderCustomizedLabel}
                 >
-                  {mockAudienceInsights.age.map((entry, index) => (
+                  {audienceData.age.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -99,7 +108,7 @@ const AudienceInsights = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={mockAudienceInsights.gender}
+                  data={audienceData.gender}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -109,7 +118,7 @@ const AudienceInsights = () => {
                   nameKey="group"
                   label={renderCustomizedLabel}
                 >
-                  {mockAudienceInsights.gender.map((entry, index) => (
+                  {audienceData.gender.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -131,7 +140,7 @@ const AudienceInsights = () => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 layout="vertical"
-                data={mockAudienceInsights.locations}
+                data={audienceData.locations}
                 margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
               >
                 <XAxis type="number" tickFormatter={(value) => `${value}%`} />
@@ -154,7 +163,7 @@ const AudienceInsights = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={mockAudienceInsights.devices}
+                  data={audienceData.devices}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -164,7 +173,7 @@ const AudienceInsights = () => {
                   nameKey="type"
                   label={renderCustomizedLabel}
                 >
-                  {mockAudienceInsights.devices.map((entry, index) => (
+                  {audienceData.devices.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
