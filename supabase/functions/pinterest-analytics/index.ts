@@ -170,7 +170,7 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       'CAMPAIGN_LIFETIME_SPEND_CAP',
       'AD_GROUP_OPTIMIZATION',
       'CAMPAIGN_DAILY_SPEND_CAP',
-      'IS_PREMIERE_CAMPAIGN',
+      // 'IS_PREMIERE_CAMPAIGN', // Removed
       'TOTAL_PAGE_VISIT',
       'TOTAL_SIGNUP',
       'TOTAL_CHECKOUT',
@@ -184,7 +184,7 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       'CHECKOUT_ROAS',
       'CUSTOM_ROAS',
       'PRODUCT_GROUP_AD_IMAGE_TAG',
-      'VIDEO_MRC_VIEWS_1',
+      // 'VIDEO_MRC_VIEWS_1', // Removed
       'VIDEO_3SEC_VIEWS_2',
       'VIDEO_P100_COMPLETE_2',
       'VIDEO_P0_COMBINED_2',
@@ -193,7 +193,7 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       'VIDEO_P75_COMBINED_2',
       'VIDEO_P95_COMBINED_2',
       'VIDEO_MRC_VIEWS_2',
-      'PAID_VIDEO_VIEWABLE_RATE',
+      // 'PAID_VIDEO_VIEWABLE_RATE', // Removed
       'VIDEO_LENGTH',
       'VIDEO_SPEND_IN_DOLLAR',
       'ECPV_IN_DOLLAR',
