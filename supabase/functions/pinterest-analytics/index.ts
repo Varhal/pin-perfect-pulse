@@ -49,10 +49,11 @@ serve(async (req) => {
     }
 
     // Get access token using the account's API key
-    const accessToken = accountData.api_key;
+    const accessToken = accountData.api_key;  // Assuming this is the access token
     const appId = accountData.app_id;
     let apiUrl = '';
     let apiParams = {};
+    let method = 'GET'; // Default method
 
     // Determine which endpoint to call
     switch (endpoint) {
@@ -70,19 +71,19 @@ serve(async (req) => {
             'SAVE',
             'TOTAL_AUDIENCE',
             'ENGAGED_AUDIENCE',
-          ].join(','), // Convert metrics array to comma-separated string
-          report_attribution_type: 'ORGANIC',
+          ].join(','),
+          report_attribution_type: 'ORGANIC'
         };
         break;
       case 'audience':
         apiUrl = `https://api.pinterest.com/v5/ad_accounts/${appId}/audience_insights/interests`;
         apiParams = {
           audience_type: 'ENGAGED',
-          format: 'PERCENTAGE',
+          format: 'PERCENTAGE'
         };
         break;
       case 'profile':
-        apiUrl = `https://api.pinterest.com/v5/user_account`;
+        apiUrl = `https://api.pinterest.com/v5/users/me`; // Changed to /users/me
         apiParams = {};
         break;
       default:
@@ -90,14 +91,13 @@ serve(async (req) => {
     }
 
     // Construct the URL with query parameters for GET requests
-    if (endpoint !== 'profile') {
-        const urlParams = new URLSearchParams(apiParams);
-        apiUrl += `?${urlParams.toString()}`;
+    if (method === 'GET' && Object.keys(apiParams).length > 0) {
+      const urlParams = new URLSearchParams(apiParams);
+      apiUrl += `?${urlParams.toString()}`;
     }
-
-    // Make the request to Pinterest API
+   // Make the request to Pinterest API
     const response = await fetch(apiUrl, {
-      method: 'GET',
+      method: method,
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
