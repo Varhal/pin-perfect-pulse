@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AccountCard from './AccountCard';
-import { PinterestAccount } from '../../services/pinterestApi';
+import { PinterestAccount } from '../../services/pinterest';
 
 interface AccountListProps {
   accounts: PinterestAccount[];
@@ -99,7 +99,7 @@ const AccountList: React.FC<AccountListProps> = ({ accounts }) => {
           <DropdownMenuContent align="end" className="w-48">
             {sortOptions.map(option => (
               <DropdownMenuItem 
-                key={option.value} 
+                key={option.value.toString()} 
                 onClick={() => setSortBy(option)} 
                 className="cursor-pointer"
               >

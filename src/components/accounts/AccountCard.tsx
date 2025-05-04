@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import MiniChart from '../ui/MiniChart';
 import { cn } from '@/lib/utils';
-import { PinterestAccount } from '../../services/pinterestApi';
+import { PinterestAccount } from '../../services/pinterest';
 
 interface AccountCardProps {
   account: PinterestAccount;

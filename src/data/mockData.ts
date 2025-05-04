@@ -1,4 +1,4 @@
-import { PinterestAccount } from '../services/pinterestApi';
+import { PinterestAccount } from '../services/pinterest';
 
 // Mock data for Pinterest accounts
 export const mockPinterestAccounts: PinterestAccount[] = [

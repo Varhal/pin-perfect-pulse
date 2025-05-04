@@ -1,4 +1,3 @@
-
 import { PinterestAnalytics, PinterestAudienceInsights, PinterestMetricData } from './types';
 
 // Mock data generation functions
@@ -17,6 +16,13 @@ export function generateChartDataByDays(days: number, minValue: number, maxValue
   }
   
   return result;
+}
+
+// Adding the missing transformApiData function
+export function transformApiData(apiData: any): any {
+  // Default implementation that just passes through the data
+  // This was referenced but not implemented in the original code
+  return apiData;
 }
 
 export function generateMockMetrics() {
