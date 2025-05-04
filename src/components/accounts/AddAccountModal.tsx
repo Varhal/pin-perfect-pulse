@@ -1,184 +1,199 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { createPinterestAccount } from '../../services/pinterest/accountsApi';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Account name must be at least 2 characters.",
-  }),
-  username: z.string().min(2, {
-    message: "Username must be at least 2 characters.",
-  }),
-  apiKey: z.string().min(10, {
-    message: "API Key must be valid.",
-  }),
-  appId: z.string().min(2, {
-    message: "App ID must be valid.",
-  }),
-});
-
 interface AddAccountModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
 }
 
-const AddAccountModal: React.FC<AddAccountModalProps> = ({
-  open,
-  onClose,
-  onSuccess,
-}) => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      username: '',
-      apiKey: '',
-      appId: '',
-    },
+const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    username: '',
+    apiKey: '',
+    appId: '',
+    appSecret: '',
+    refreshToken: '',
+    avatarUrl: ''
   });
-  
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "You must be logged in to add an account.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      const { error } = await supabase
-        .from('pinterest_accounts')
-        .insert({
-          user_id: user.id,
-          name: values.name,
-          username: values.username,
-          avatar_url: null, // We'll update this later after fetching from Pinterest API
-          api_key: values.apiKey,
-          app_id: values.appId
-        });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Account added",
-        description: "Your Pinterest account has been added successfully.",
+      const requiredFields = ['name', 'username', 'apiKey', 'appId', 'appSecret'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      }
+
+      const result = await createPinterestAccount({
+        name: formData.name,
+        username: formData.username,
+        apiKey: formData.apiKey,
+        appId: formData.appId,
+        appSecret: formData.appSecret,
+        refreshToken: formData.refreshToken || undefined,
+        avatarUrl: formData.avatarUrl || undefined
       });
-      
-      // Invalidate queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['pinterestAccounts'] });
-      
-      form.reset();
-      onSuccess();
-    } catch (error: any) {
+
+      if (result) {
+        toast({
+          title: 'Success',
+          description: `Pinterest account "${formData.name}" has been added.`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['pinterestAccounts'] });
+        onClose();
+      } else {
+        throw new Error('Failed to create account');
+      }
+    } catch (error) {
       console.error('Error adding account:', error);
       toast({
-        title: "Error",
-        description: `Failed to add Pinterest account: ${error.message || 'Please try again.'}`,
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to add Pinterest account.',
+        variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Pinterest Account</DialogTitle>
           <DialogDescription>
-            Enter your Pinterest API Key and App ID to connect your account.
+            Connect a new Pinterest account to your dashboard.
           </DialogDescription>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="My Pinterest Account" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="pinterest_username" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="apiKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>API Key</FormLabel>
-                  <FormControl>
-                    <Input placeholder="pint_..." type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="appId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>App ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="12345678" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Adding...' : 'Add Account'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name *
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="My Brand Account"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-right">
+                Username *
+              </Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="@mybrand"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="apiKey" className="text-right">
+                Access Token *
+              </Label>
+              <Input
+                id="apiKey"
+                name="apiKey"
+                value={formData.apiKey}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="pina_..."
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="refreshToken" className="text-right">
+                Refresh Token
+              </Label>
+              <Input
+                id="refreshToken"
+                name="refreshToken"
+                value={formData.refreshToken}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="pinr_..."
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="appId" className="text-right">
+                App ID *
+              </Label>
+              <Input
+                id="appId"
+                name="appId"
+                value={formData.appId}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="12345678"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="appSecret" className="text-right">
+                App Secret *
+              </Label>
+              <Input
+                id="appSecret"
+                name="appSecret"
+                value={formData.appSecret}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="your_app_secret"
+                type="password"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="avatarUrl" className="text-right">
+                Avatar URL
+              </Label>
+              <Input
+                id="avatarUrl"
+                name="avatarUrl"
+                value={formData.avatarUrl}
+                onChange={handleChange}
+                className="col-span-3"
+                placeholder="https://example.com/avatar.png"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Adding...' : 'Add Account'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
