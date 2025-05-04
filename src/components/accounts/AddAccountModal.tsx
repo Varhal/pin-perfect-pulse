@@ -11,9 +11,10 @@ import { useQueryClient } from '@tanstack/react-query';
 interface AddAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose }) => {
+const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -60,7 +61,7 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({ isOpen, onClose }) =>
           description: `Pinterest account "${formData.name}" has been added.`,
         });
         queryClient.invalidateQueries({ queryKey: ['pinterestAccounts'] });
-        onClose();
+        onSuccess();
       } else {
         throw new Error('Failed to create account');
       }

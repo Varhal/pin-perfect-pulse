@@ -27,8 +27,9 @@ export const fetchPinterestAccounts = async (): Promise<PinterestAccount[]> => {
       avatarUrl: account.avatar_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
       apiKey: account.api_key,
       appId: account.app_id,
-      refreshToken: account.refresh_token,
-      tokenExpiresAt: account.token_expires_at,
+      refreshToken: account.refresh_token || null,
+      tokenExpiresAt: account.token_expires_at || null,
+      appSecret: account.app_secret || null,
       createdAt: new Date(account.created_at),
       // Initialize metrics with empty data until we can fetch real analytics
       impressions: { value: 0, data: [] },
@@ -60,7 +61,7 @@ export const createPinterestAccount = async (accountData: {
 
     const { data, error } = await supabase
       .from('pinterest_accounts')
-      .insert([{
+      .insert({
         name: accountData.name,
         username: accountData.username,
         avatar_url: accountData.avatarUrl || null,
@@ -69,7 +70,7 @@ export const createPinterestAccount = async (accountData: {
         app_secret: accountData.appSecret,
         refresh_token: accountData.refreshToken || null,
         token_expires_at: tokenExpiresAt.toISOString(),
-      }])
+      })
       .select('*')
       .single();
 
@@ -89,8 +90,9 @@ export const createPinterestAccount = async (accountData: {
       avatarUrl: data.avatar_url || 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
       apiKey: data.api_key,
       appId: data.app_id,
-      refreshToken: data.refresh_token,
-      tokenExpiresAt: data.token_expires_at,
+      refreshToken: data.refresh_token || null,
+      tokenExpiresAt: data.token_expires_at || null,
+      appSecret: data.app_secret || null,
       createdAt: new Date(data.created_at),
       impressions: { value: 0, data: [] },
       engagements: { value: 0, data: [] },

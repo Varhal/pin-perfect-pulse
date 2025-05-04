@@ -132,7 +132,7 @@ const Sidebar = ({ className }: SidebarProps) => {
 
       {/* Add Account Modal */}
       <AddAccountModal 
-        open={isAddAccountModalOpen} 
+        isOpen={isAddAccountModalOpen} 
         onClose={() => setIsAddAccountModalOpen(false)}
         onSuccess={handleAddAccountSuccess}
       />

@@ -8,8 +8,8 @@ export interface PinterestAccount {
   apiKey: string;
   appId: string;
   appSecret?: string;
-  refreshToken?: string;
-  tokenExpiresAt?: string;
+  refreshToken?: string | null;
+  tokenExpiresAt?: string | null;
   impressions: {
     value: number;
     data: { value: number }[];
