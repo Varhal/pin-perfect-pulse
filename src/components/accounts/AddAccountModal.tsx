@@ -54,14 +54,17 @@ const AddAccountModal: React.FC<AddAccountModalProps> = ({
     if (!user) return;
     
     try {
-      const { error } = await supabase.from('pinterest_accounts').insert({
-        user_id: user.id,
-        name: values.name,
-        username: values.username,
-        avatar_url: null, // We'll update this later after fetching from Pinterest API
-        api_key: values.apiKey,
-        app_id: values.appId
-      });
+      // Use type assertion to work around TypeScript limitations with dynamic table names
+      const { error } = await supabase
+        .from('pinterest_accounts' as any)
+        .insert({
+          user_id: user.id,
+          name: values.name,
+          username: values.username,
+          avatar_url: null, // We'll update this later after fetching from Pinterest API
+          api_key: values.apiKey,
+          app_id: values.appId
+        });
       
       if (error) throw error;
       

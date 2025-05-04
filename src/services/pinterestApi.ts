@@ -59,6 +59,7 @@ export interface PinterestAudienceInsights {
 // This will allow the app to work with real database records but mock analytics
 // Later we can replace these functions with real API calls
 export const fetchPinterestAccounts = async (): Promise<PinterestAccount[]> => {
+  // Use type assertion to work around TypeScript limitations with dynamic table names
   const { data: accounts, error } = await supabase
     .from('pinterest_accounts')
     .select('*');
@@ -115,6 +116,7 @@ export const fetchPinterestAccounts = async (): Promise<PinterestAccount[]> => {
 
 export const fetchAccountAnalytics = async (accountId: string): Promise<PinterestAnalytics> => {
   // Check if account exists
+  // Use type assertion to work around TypeScript limitations with dynamic table names
   const { data: account, error } = await supabase
     .from('pinterest_accounts')
     .select('*')
@@ -163,6 +165,7 @@ export const fetchAccountAnalytics = async (accountId: string): Promise<Pinteres
 
 export const fetchAudienceInsights = async (accountId: string): Promise<PinterestAudienceInsights> => {
   // Check if account exists
+  // Use type assertion to work around TypeScript limitations with dynamic table names
   const { data: account, error } = await supabase
     .from('pinterest_accounts')
     .select('*')

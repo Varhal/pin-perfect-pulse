@@ -1,178 +1,129 @@
+import { PinterestAccount } from '../services/pinterestApi';
 
-import { AccountData } from '../components/accounts/AccountCard';
-
-// Function to generate a random array of values for charts
-const generateChartData = (length: number, minValue: number, maxValue: number) => {
-  return Array.from({ length }, () => ({
-    value: Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue
-  }));
-};
-
-export const mockAccounts: AccountData[] = [
+// Mock data for Pinterest accounts
+export const mockPinterestAccounts: PinterestAccount[] = [
   {
     id: '1',
-    name: 'Beauty & Fashion',
-    username: 'beautyfashion',
+    name: 'Home Decor Ideas',
+    username: 'homedecor_ideas',
     avatarUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
+    apiKey: 'pint_1234567890',
+    appId: '12345678',
     impressions: {
-      value: 1250000,
-      data: generateChartData(10, 100000, 150000)
+      value: 850000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
     },
     engagements: {
       value: 45000,
-      data: generateChartData(10, 3000, 6000)
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
     },
     clicks: {
-      value: 32000,
-      data: generateChartData(10, 2500, 4500)
+      value: 22000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
     },
     saves: {
-      value: 18000,
-      data: generateChartData(10, 1000, 2500)
+      value: 12000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
     },
     engaged: {
-      value: 52000,
-      data: generateChartData(10, 4000, 7000)
+      value: 35000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
     },
-    createdAt: new Date('2023-06-15')
+    createdAt: new Date('2023-01-15')
   },
   {
     id: '2',
-    name: 'Home Decor Ideas',
-    username: 'homedecor',
-    avatarUrl: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901',
+    name: 'Fashion Trends',
+    username: 'fashion_trends',
+    avatarUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f',
+    apiKey: 'pint_0987654321',
+    appId: '87654321',
     impressions: {
-      value: 890000,
-      data: generateChartData(10, 70000, 110000)
-    },
-    engagements: {
-      value: 38500,
-      data: generateChartData(10, 2500, 5000)
-    },
-    clicks: {
-      value: 22400,
-      data: generateChartData(10, 1800, 3200)
-    },
-    saves: {
-      value: 16700,
-      data: generateChartData(10, 800, 2000)
-    },
-    engaged: {
-      value: 41200,
-      data: generateChartData(10, 3000, 5500)
-    },
-    createdAt: new Date('2023-09-22')
-  },
-  {
-    id: '3',
-    name: 'Tasty Recipes',
-    username: 'tastyrecipes',
-    avatarUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b',
-    impressions: {
-      value: 1450000,
-      data: generateChartData(10, 120000, 170000)
+      value: 1200000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
     },
     engagements: {
       value: 65000,
-      data: generateChartData(10, 5000, 9000)
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
     },
     clicks: {
-      value: 42000,
-      data: generateChartData(10, 3500, 6000)
+      value: 30000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
     },
     saves: {
-      value: 28500,
-      data: generateChartData(10, 1800, 3800)
+      value: 18000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
     },
     engaged: {
-      value: 73000,
-      data: generateChartData(10, 6000, 10000)
+      value: 48000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
     },
-    createdAt: new Date('2023-04-10')
+    createdAt: new Date('2023-03-22')
   },
   {
-    id: '4',
-    name: 'Fitness Tips',
-    username: 'fitnesstips',
-    avatarUrl: 'https://images.unsplash.com/photo-1500673922987-e212871fec22',
+    id: '3',
+    name: 'Recipe Collection',
+    username: 'recipe_collection',
+    avatarUrl: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f',
+    apiKey: 'pint_2468101214',
+    appId: '24681012',
     impressions: {
-      value: 760000,
-      data: generateChartData(10, 60000, 95000)
+      value: 750000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
     },
     engagements: {
-      value: 32000,
-      data: generateChartData(10, 2200, 4200)
+      value: 38000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
     },
     clicks: {
-      value: 18600,
-      data: generateChartData(10, 1300, 2700)
+      value: 19000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
     },
     saves: {
-      value: 12400,
-      data: generateChartData(10, 700, 1900)
+      value: 9500,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
     },
     engaged: {
-      value: 35000,
-      data: generateChartData(10, 2500, 4500)
+      value: 28000,
+      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
     },
-    createdAt: new Date('2023-11-05')
-  },
-  {
-    id: '5',
-    name: 'Travel Destinations',
-    username: 'traveldest',
-    avatarUrl: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7',
-    impressions: {
-      value: 1680000,
-      data: generateChartData(10, 130000, 190000)
-    },
-    engagements: {
-      value: 78000,
-      data: generateChartData(10, 5500, 9500)
-    },
-    clicks: {
-      value: 52000,
-      data: generateChartData(10, 4000, 7000)
-    },
-    saves: {
-      value: 35000,
-      data: generateChartData(10, 2500, 5000)
-    },
-    engaged: {
-      value: 81000,
-      data: generateChartData(10, 6500, 11000)
-    },
-    createdAt: new Date('2023-07-30')
+    createdAt: new Date('2023-05-10')
   }
 ];
 
-export const generateChartDataByDays = (days: number, minValue: number, maxValue: number) => {
-  const result = [];
-  const today = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(today.getDate() - i);
-    
-    result.push({
-      date: date.toISOString().split('T')[0],
-      value: Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue
-    });
-  }
-  
-  return result;
+// Mock data for analytics
+export const mockAnalyticsData = {
+  impressions: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 20000) + 30000
+  })),
+  engagements: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 3000) + 5000
+  })),
+  pinClicks: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 3000) + 4000
+  })),
+  outboundClicks: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 2000) + 2000
+  })),
+  saves: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 2000) + 1500
+  })),
+  totalAudience: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 20000) + 100000
+  })),
+  engagedAudience: Array.from({ length: 30 }, (_, i) => ({
+    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    value: Math.floor(Math.random() * 15000) + 50000
+  }))
 };
 
-export const mockMetricData = {
-  impressions: generateChartDataByDays(30, 30000, 50000),
-  engagements: generateChartDataByDays(30, 5000, 8000),
-  pinClicks: generateChartDataByDays(30, 4000, 7000),
-  outboundClicks: generateChartDataByDays(30, 2000, 4000),
-  saves: generateChartDataByDays(30, 1500, 3500),
-  totalAudience: generateChartDataByDays(30, 100000, 120000),
-  engagedAudience: generateChartDataByDays(30, 50000, 65000)
-};
-
+// Mock data for audience insights
 export const mockAudienceInsights = {
   categories: [
     { name: 'Home Decor', percentage: 35 },
