@@ -71,6 +71,14 @@ export const createPinterestAccount = async (accountData: {
   avatarUrl?: string;
 }): Promise<PinterestAccount | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found');
+      throw new Error('You must be logged in to add a Pinterest account');
+    }
+
     // Calculate token expiration time (default to 30 days if not provided)
     const tokenExpiresAt = new Date();
     tokenExpiresAt.setDate(tokenExpiresAt.getDate() + 30); // Default 30 days expiration
@@ -86,6 +94,7 @@ export const createPinterestAccount = async (accountData: {
         app_secret: accountData.appSecret,
         refresh_token: accountData.refreshToken || null,
         token_expires_at: tokenExpiresAt.toISOString(),
+        user_id: user.id // Add the user_id field here
       })
       .select('*')
       .single();
