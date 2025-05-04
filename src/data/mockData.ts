@@ -1,160 +1,50 @@
-import { PinterestAccount } from '../services/pinterest';
 
-// Mock data for Pinterest accounts
-export const mockPinterestAccounts: PinterestAccount[] = [
+import { PinterestAccount } from '../services/pinterest';
+import { useQuery } from '@tanstack/react-query';
+
+// Mock Pinterest accounts data
+const mockAccounts: PinterestAccount[] = [
   {
     id: '1',
-    name: 'Home Decor Ideas',
-    username: 'homedecor_ideas',
-    avatarUrl: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9',
-    apiKey: 'pint_1234567890',
-    appId: '12345678',
-    impressions: {
-      value: 850000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
-    },
-    engagements: {
-      value: 45000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
-    },
-    clicks: {
-      value: 22000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
-    },
-    saves: {
-      value: 12000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
-    },
-    engaged: {
-      value: 35000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
-    },
-    createdAt: new Date('2023-01-15')
+    name: 'Design Inspirations',
+    username: 'designinspire',
+    avatarUrl: 'https://via.placeholder.com/150',
+    createdAt: '2023-01-15T10:30:00Z',
+    impressions: { value: 12500, data: [10, 15, 25, 38, 50, 40, 35, 60, 75, 80] },
+    engagements: { value: 5200, data: [5, 12, 18, 25, 32, 30, 28, 40, 45, 48] },
+    clicks: { value: 3800, data: [3, 8, 15, 20, 25, 23, 20, 30, 35, 38] },
+    saves: { value: 2200, data: [2, 5, 10, 12, 15, 13, 12, 18, 20, 22] },
+    engaged: { value: 4500, data: [4, 10, 17, 23, 28, 26, 25, 35, 42, 45] }
   },
   {
     id: '2',
-    name: 'Fashion Trends',
-    username: 'fashion_trends',
-    avatarUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f',
-    apiKey: 'pint_0987654321',
-    appId: '87654321',
-    impressions: {
-      value: 1200000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
-    },
-    engagements: {
-      value: 65000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
-    },
-    clicks: {
-      value: 30000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
-    },
-    saves: {
-      value: 18000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
-    },
-    engaged: {
-      value: 48000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
-    },
-    createdAt: new Date('2023-03-22')
+    name: 'Travel Adventures',
+    username: 'traveladventures',
+    avatarUrl: 'https://via.placeholder.com/150',
+    createdAt: '2023-02-20T14:45:00Z',
+    impressions: { value: 18700, data: [15, 20, 30, 45, 60, 55, 50, 70, 80, 90] },
+    engagements: { value: 8100, data: [8, 15, 22, 30, 38, 35, 32, 45, 50, 55] },
+    clicks: { value: 5600, data: [5, 10, 18, 25, 30, 28, 25, 35, 40, 43] },
+    saves: { value: 3400, data: [3, 7, 12, 15, 18, 17, 16, 22, 25, 28] },
+    engaged: { value: 6900, data: [6, 12, 20, 28, 34, 32, 30, 40, 48, 52] }
   },
   {
     id: '3',
-    name: 'Recipe Collection',
-    username: 'recipe_collection',
-    avatarUrl: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f',
-    apiKey: 'pint_2468101214',
-    appId: '24681012',
-    impressions: {
-      value: 750000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 40000) + 70000 }))
-    },
-    engagements: {
-      value: 38000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 2500 }))
-    },
-    clicks: {
-      value: 19000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1400) + 1800 }))
-    },
-    saves: {
-      value: 9500,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 1200) + 800 }))
-    },
-    engaged: {
-      value: 28000,
-      data: Array.from({ length: 10 }, () => ({ value: Math.floor(Math.random() * 2500) + 3000 }))
-    },
-    createdAt: new Date('2023-05-10')
+    name: 'Food Recipes',
+    username: 'foodrecipes',
+    avatarUrl: 'https://via.placeholder.com/150',
+    createdAt: '2023-03-10T09:15:00Z',
+    impressions: { value: 21300, data: [18, 25, 35, 50, 65, 60, 55, 75, 85, 95] },
+    engagements: { value: 9500, data: [9, 18, 25, 35, 42, 40, 38, 50, 55, 60] },
+    clicks: { value: 6200, data: [6, 12, 20, 28, 33, 31, 28, 38, 43, 46] },
+    saves: { value: 4100, data: [4, 8, 14, 17, 20, 19, 18, 24, 28, 30] },
+    engaged: { value: 8200, data: [8, 15, 23, 32, 38, 36, 35, 45, 52, 58] }
   }
 ];
 
-// Mock data for analytics
-export const mockAnalyticsData = {
-  impressions: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 20000) + 30000
-  })),
-  engagements: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 3000) + 5000
-  })),
-  pinClicks: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 3000) + 4000
-  })),
-  outboundClicks: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 2000) + 2000
-  })),
-  saves: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 2000) + 1500
-  })),
-  totalAudience: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 20000) + 100000
-  })),
-  engagedAudience: Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 15000) + 50000
-  }))
-};
-
-// Mock data for audience insights
-export const mockAudienceInsights = {
-  categories: [
-    { name: 'Home Decor', percentage: 35 },
-    { name: 'DIY & Crafts', percentage: 25 },
-    { name: 'Food & Drink', percentage: 20 },
-    { name: 'Fashion', percentage: 15 },
-    { name: 'Others', percentage: 5 },
-  ],
-  age: [
-    { group: '18-24', percentage: 15 },
-    { group: '25-34', percentage: 40 },
-    { group: '35-44', percentage: 25 },
-    { group: '45-54', percentage: 12 },
-    { group: '55+', percentage: 8 },
-  ],
-  gender: [
-    { group: 'Female', percentage: 78 },
-    { group: 'Male', percentage: 21 },
-    { group: 'Other', percentage: 1 },
-  ],
-  locations: [
-    { country: 'United States', percentage: 45 },
-    { country: 'United Kingdom', percentage: 12 },
-    { country: 'Canada', percentage: 10 },
-    { country: 'Australia', percentage: 8 },
-    { country: 'Germany', percentage: 5 },
-    { country: 'Others', percentage: 20 },
-  ],
-  devices: [
-    { type: 'Mobile', percentage: 65 },
-    { type: 'Desktop', percentage: 30 },
-    { type: 'Tablet', percentage: 5 },
-  ]
-};
+export function useMockPinterestAccounts() {
+  return useQuery({
+    queryKey: ['mockPinterestAccounts'],
+    queryFn: () => mockAccounts,
+  });
+}

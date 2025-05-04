@@ -6,9 +6,10 @@ import { Search, ChevronDown } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AccountCard from './AccountCard';
 import { PinterestAccount } from '../../services/pinterest';
+import { useMockPinterestAccounts } from '../../data/mockData';
 
 interface AccountListProps {
-  accounts: PinterestAccount[];
+  accounts?: PinterestAccount[];
 }
 
 type SortOption = {
@@ -47,7 +48,11 @@ const sortOptions: SortOption[] = [
   }
 ];
 
-const AccountList: React.FC<AccountListProps> = ({ accounts }) => {
+const AccountList: React.FC<AccountListProps> = ({ accounts: propAccounts }) => {
+  // Fetch mock accounts if none are provided via props
+  const { data: mockAccounts } = useMockPinterestAccounts();
+  const accounts = propAccounts || mockAccounts || [];
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>(sortOptions[0]);
   
