@@ -1,1 +1,32 @@
+
 project_id = "eoxazjpmlmntrcrsouhr"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[studio]
+port = 54323
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+port = 9999
+
+[realtime]
+enabled = true
+
+[inbucket]
+enabled = true
+port = 54324
+
+[functions]
+[functions.pinterest-analytics]
+verify_jwt = true
