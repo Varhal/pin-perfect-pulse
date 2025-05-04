@@ -90,7 +90,17 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       'TOTAL_AUDIENCE',
       'ENGAGED_AUDIENCE'
     ].join(','),
-    report_attribution_type: 'ORGANIC'
+    report_attribution_type: 'ORGANIC',
+    columns: [ // Додано параметр 'columns'
+      'DATE',
+      'IMPRESSION',
+      'ENGAGEMENT',
+      'PIN_CLICK',
+      'OUTBOUND_CLICK',
+      'SAVE',
+      'TOTAL_AUDIENCE',
+      'ENGAGED_AUDIENCE'
+    ].join(',')
   };
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
