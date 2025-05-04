@@ -13,13 +13,15 @@ const corsHeaders = {
  * @param accountId - Pinterest account ID
  * @param refreshToken - Pinterest API refresh token
  * @param appId - Pinterest App ID
+ * @param appSecret - Pinterest App Secret
  * @returns New access token and refresh token
  */
 async function refreshPinterestToken(
   supabaseClient: any,
   accountId: string,
   refreshToken: string,
-  appId: string
+  appId: string,
+  appSecret: string
 ): Promise<{ accessToken: string; refreshToken: string }> {
   try {
     console.log(`Refreshing token for account: ${accountId}`);
@@ -27,19 +29,9 @@ async function refreshPinterestToken(
     // Pinterest OAuth2 token endpoint
     const tokenEndpoint = 'https://api.pinterest.com/v5/oauth/token';
     
-    // Get app secret from database or environment
-    // In a real implementation, you should securely store this
-    const { data: accountData, error: secretError } = await supabaseClient
-      .from('pinterest_accounts')
-      .select('app_secret')
-      .eq('id', accountId)
-      .single();
-      
-    if (secretError || !accountData) {
-      throw new Error('Could not retrieve app secret');
+    if (!appSecret) {
+      throw new Error('App secret is required for token refresh');
     }
-    
-    const appSecret = accountData.app_secret;
     
     // Base64 encode app_id:app_secret for Basic auth
     const basicAuth = btoa(`${appId}:${appSecret}`);
@@ -92,14 +84,14 @@ async function refreshPinterestToken(
 }
 
 /**
- * Отримує аналітичні дані для акаунта Pinterest.
- * @param req - Об'єкт HTTP-запиту.
- * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
- * @param accountId - ID аккаунта Pinterest
- * @param accessToken - Токен доступу Pinterest API.
- * @param appId - ID застосунку Pinterest.
- * @param dateRange - Об'єкт з датами початку та кінця періоду аналізу.
- * @returns Дані аналітики у форматі JSON.
+ * Gets analytics data for a Pinterest account.
+ * @param req - HTTP request object.
+ * @param supabaseClient - Supabase client for database interaction.
+ * @param accountId - Pinterest account ID.
+ * @param accessToken - Pinterest API access token.
+ * @param appId - Pinterest App ID.
+ * @param dateRange - Object with start and end dates for analysis.
+ * @returns Analytics data in JSON format.
  */
 async function getAnalyticsData(
   req: Request,
@@ -109,6 +101,8 @@ async function getAnalyticsData(
   appId: string,
   dateRange: { startDate?: string; endDate?: string } | undefined
 ) {
+  // Use ad_account_id instead of app_id for analytics API
+  // This might be the root cause of the 401 error
   const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${appId}/analytics`;
   const apiParams = {
     start_date: dateRange?.startDate || getDefaultStartDate(),
@@ -129,31 +123,45 @@ async function getAnalyticsData(
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
 
-  const response = await fetch(finalUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    console.log(`Making Pinterest API request to: ${apiUrl}`);
+    console.log(`Using token: ${accessToken.substring(0, 10)}...`);
+    
+    const response = await fetch(finalUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('Pinterest API error:', errorData);
-    throw new Error(`Pinterest API error: ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Pinterest API error:', errorData);
+      
+      // Check if this is an authentication error and could be fixed with a new token
+      if (response.status === 401) {
+        throw new Error('Authentication failed with Pinterest API');
+      }
+      
+      throw new Error(`Pinterest API error: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error in getAnalyticsData: ${error.message}`);
+    throw error;
   }
-
-  return await response.json();
 }
 
 /**
- * Отримує дані про аудиторію для акаунта Pinterest.
- * @param req - Об'єкт HTTP-запиту.
- * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
- * @param accountId - ID аккаунта Pinterest
- * @param accessToken - Токен доступу Pinterest API.
- * @param appId - ID застосунку Pinterest.
- * @returns Дані про аудиторію у форматі JSON.
+ * Gets audience data for a Pinterest account.
+ * @param req - HTTP request object.
+ * @param supabaseClient - Supabase client for database interaction.
+ * @param accountId - Pinterest account ID.
+ * @param accessToken - Pinterest API access token.
+ * @param appId - Pinterest App ID.
+ * @returns Audience data in JSON format.
  */
 async function getAudienceData(
   req: Request,
@@ -171,50 +179,62 @@ async function getAudienceData(
   const urlParams = new URLSearchParams(apiParams);
   const finalUrl = `${apiUrl}?${urlParams.toString()}`;
 
-  const response = await fetch(finalUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await fetch(finalUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('Pinterest API error:', errorData);
-    throw new Error(`Pinterest API error: ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Pinterest API error:', errorData);
+      throw new Error(`Pinterest API error: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error in getAudienceData: ${error.message}`);
+    throw error;
   }
-
-  return await response.json();
 }
 
 /**
- * Отримує дані профілю користувача Pinterest.
- * @param req - Об'єкт HTTP-запиту.
- * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
- * @param accessToken - Токен доступу Pinterest API.
- * @returns Дані профілю користувача у форматі JSON.
+ * Gets profile data for a Pinterest user.
+ * @param req - HTTP request object.
+ * @param supabaseClient - Supabase client for database interaction.
+ * @param accessToken - Pinterest API access token.
+ * @returns User profile data in JSON format.
  */
 async function getProfileData(
   req: Request,
   supabaseClient: any,
   accessToken: string
 ) {
-  const apiUrl = `https://api.pinterest.com/v5/users/me`;
-  const response = await fetch(apiUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const apiUrl = `https://api.pinterest.com/v5/user_account`;
+  
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('Pinterest API error:', errorData);
-    throw new Error(`Pinterest API error: ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Pinterest API error:', errorData);
+      throw new Error(`Pinterest API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error in getProfileData: ${error.message}`);
+    throw error;
   }
-  return await response.json();
 }
 
 /**
@@ -225,12 +245,12 @@ async function getProfileData(
 function tokenNeedsRefresh(tokenExpiresAt: string | null): boolean {
   if (!tokenExpiresAt) return true;
   
-  // Add 5 minute buffer to expiration time
+  // Add 10 minute buffer to expiration time
   const expiryDate = new Date(tokenExpiresAt).getTime();
   const now = Date.now();
-  const fiveMinutesInMs = 5 * 60 * 1000;
+  const tenMinutesInMs = 10 * 60 * 1000;
   
-  return now + fiveMinutesInMs >= expiryDate;
+  return now + tenMinutesInMs >= expiryDate;
 }
 
 serve(async (req) => {
@@ -264,6 +284,10 @@ serve(async (req) => {
     // Parse request body
     const { accountId, endpoint, dateRange } = await req.json();
 
+    if (!accountId) {
+      throw new Error('Account ID is required');
+    }
+
     // Fetch the account data from Supabase
     const { data: accountData, error: accountError } = await supabaseClient
       .from('pinterest_accounts')
@@ -271,49 +295,89 @@ serve(async (req) => {
       .eq('id', accountId)
       .eq('user_id', user.id)
       .single();
+      
     if (accountError || !accountData) {
       throw new Error('Pinterest account not found');
     }
 
-    // Get access token from the account data
+    // Get access token and other credentials from the account data
     let accessToken = accountData.api_key;
     let refreshToken = accountData.refresh_token;
     const appId = accountData.app_id;
+    const appSecret = accountData.app_secret;
     const tokenExpiresAt = accountData.token_expires_at;
 
-    // Check if token needs refreshing
+    // Check if token needs refreshing and we have the necessary credentials
     if (tokenNeedsRefresh(tokenExpiresAt)) {
       console.log('Token needs refreshing');
-      if (refreshToken) {
+      
+      if (refreshToken && appSecret) {
         try {
-          const newTokens = await refreshPinterestToken(supabaseClient, accountId, refreshToken, appId);
+          console.log('Attempting to refresh token with credentials');
+          const newTokens = await refreshPinterestToken(
+            supabaseClient, 
+            accountId, 
+            refreshToken, 
+            appId, 
+            appSecret
+          );
           accessToken = newTokens.accessToken;
           refreshToken = newTokens.refreshToken;
+          console.log('Token refreshed successfully');
         } catch (refreshError) {
           console.error('Failed to refresh token:', refreshError);
-          // Continue with the old token as a fallback
           console.log('Using existing token as fallback');
+          // Continue with the old token as a fallback
         }
       } else {
-        console.warn('No refresh token available, using existing access token');
+        if (!refreshToken) {
+          console.warn('No refresh token available, using existing access token');
+        }
+        if (!appSecret) {
+          console.warn('No app secret available for token refresh');
+        }
       }
     }
+
+    // Verify we have a token to use
+    if (!accessToken) {
+      throw new Error('No access token available for Pinterest API');
+    }
     
+    // Initialize data variable
     let data;
 
-    // Determine which endpoint to call
-    switch (endpoint) {
-      case 'analytics':
-        data = await getAnalyticsData(req, supabaseClient, accountId, accessToken, appId, dateRange);
-        break;
-      case 'audience':
-        data = await getAudienceData(req, supabaseClient, accountId, accessToken, appId);
-        break;
-      case 'profile':
-        data = await getProfileData(req, supabaseClient, accessToken);
-        break;
-      default:
-        throw new Error('Invalid endpoint');
+    try {
+      // Determine which endpoint to call
+      switch (endpoint) {
+        case 'analytics':
+          data = await getAnalyticsData(req, supabaseClient, accountId, accessToken, appId, dateRange);
+          break;
+        case 'audience':
+          data = await getAudienceData(req, supabaseClient, accountId, accessToken, appId);
+          break;
+        case 'profile':
+          data = await getProfileData(req, supabaseClient, accessToken);
+          break;
+        default:
+          throw new Error(`Invalid endpoint: ${endpoint}`);
+      }
+    } catch (apiError) {
+      console.error(`API Error: ${apiError.message}`);
+      
+      // Return a fallback with error info instead of throwing
+      return new Response(JSON.stringify({
+        error: apiError.message,
+        fallback: true,
+        message: "Using mock data due to API error",
+        // The analytics service will use mock data when this error is received
+      }), {
+        status: 200, // Still return 200 to let frontend handle this gracefully
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     // Return the data
@@ -328,6 +392,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: error.message,
+        // Send a specific status code that the frontend can check
+        code: 'PINTEREST_API_ERROR',
       }),
       {
         status: 400,

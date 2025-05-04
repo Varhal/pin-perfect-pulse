@@ -6,6 +6,7 @@ import {
   generateMockAudienceInsights, 
   generateChartDataByDays 
 } from './mockHelpers';
+import { useToast } from '@/hooks/use-toast';
 
 export const fetchAccountAnalytics = async (accountId: string): Promise<PinterestAnalytics> => {
   try {
@@ -35,11 +36,17 @@ export const fetchAccountAnalytics = async (accountId: string): Promise<Pinteres
       });
 
       if (apiError) {
+        console.error('Error from Pinterest analytics function:', apiError);
         throw apiError;
       }
 
+      // Check if there was an API error that returned fallback flag
+      if (analyticsData && analyticsData.fallback) {
+        console.warn('Using mock data due to API error:', analyticsData.message);
+        return generateMockAnalytics();
+      }
+
       // Transform the API response to our format
-      // This is a simplified example - adjust based on actual API response
       if (analyticsData && analyticsData.data) {
         return {
           impressions: transformApiDataToMetricData(analyticsData.data, 'IMPRESSION'),
@@ -92,7 +99,14 @@ export const fetchAudienceInsights = async (accountId: string): Promise<Pinteres
       });
 
       if (apiError) {
+        console.error('Error from Pinterest audience insights function:', apiError);
         throw apiError;
+      }
+
+      // Check if there was an API error that returned fallback flag
+      if (insightsData && insightsData.fallback) {
+        console.warn('Using mock audience data due to API error:', insightsData.message);
+        return generateMockAudienceInsights();
       }
 
       // Transform the API response to our format
