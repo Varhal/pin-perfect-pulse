@@ -9,25 +9,32 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+  
+  const initials = user?.email ? user.email.substring(0, 2).toUpperCase() : 'JD';
+
   return (
     <header className="h-16 border-b flex items-center justify-end px-4 lg:px-6">
       <div>
         <DropdownMenu>
           <DropdownMenuTrigger className="focus:outline-none">
             <Avatar className="cursor-pointer">
-              <AvatarImage src="https://images.unsplash.com/photo-1582562124811-c09040d0a901" alt="User avatar" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src={user?.user_metadata?.avatar_url} alt="User avatar" />
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {user?.email}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
