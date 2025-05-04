@@ -13,10 +13,13 @@ export type Database = {
         Row: {
           api_key: string
           app_id: string
+          app_secret: string | null
           avatar_url: string | null
           created_at: string
           id: string
           name: string
+          refresh_token: string | null
+          token_expires_at: string | null
           updated_at: string
           user_id: string
           username: string
@@ -24,10 +27,13 @@ export type Database = {
         Insert: {
           api_key: string
           app_id: string
+          app_secret?: string | null
           avatar_url?: string | null
           created_at?: string
           id?: string
           name: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id: string
           username: string
@@ -35,10 +41,13 @@ export type Database = {
         Update: {
           api_key?: string
           app_id?: string
+          app_secret?: string | null
           avatar_url?: string | null
           created_at?: string
           id?: string
           name?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
           updated_at?: string
           user_id?: string
           username?: string

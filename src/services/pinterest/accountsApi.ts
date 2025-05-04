@@ -11,9 +11,9 @@ type PinterestAccountDB = {
   avatar_url: string | null;
   api_key: string;
   app_id: string;
-  app_secret?: string | null;
-  refresh_token?: string | null;
-  token_expires_at?: string | null;
+  app_secret: string | null;
+  refresh_token: string | null;
+  token_expires_at: string | null;
   created_at: string;
   updated_at: string;
   user_id: string;
@@ -86,7 +86,7 @@ export const createPinterestAccount = async (accountData: {
         app_secret: accountData.appSecret,
         refresh_token: accountData.refreshToken || null,
         token_expires_at: tokenExpiresAt.toISOString(),
-      } as any) // Using 'any' to bypass TypeScript checking for now
+      })
       .select('*')
       .single();
 
