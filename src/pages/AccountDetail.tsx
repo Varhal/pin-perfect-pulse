@@ -3,7 +3,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import Layout from '../components/layout/Layout';
-import { fetchAccountAnalytics, fetchAudienceInsights, fetchPinterestAccounts, PinterestAccount } from '../services/pinterestApi';
+import { 
+  fetchAccountAnalytics, 
+  fetchAudienceInsights, 
+  fetchPinterestAccounts, 
+  PinterestAccount 
+} from '../services/pinterest';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import PerformanceMetrics from '../components/analytics/PerformanceMetrics';
 import MetricChart from '../components/analytics/MetricChart';

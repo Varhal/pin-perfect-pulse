@@ -4,7 +4,7 @@ import Layout from '../components/layout/Layout';
 import PerformanceMetrics from '../components/analytics/PerformanceMetrics';
 import MetricChart from '../components/analytics/MetricChart';
 import AudienceInsights from '../components/analytics/AudienceInsights';
-import { fetchPinterestAccounts, fetchAccountAnalytics, fetchAudienceInsights } from '../services/pinterestApi';
+import { fetchPinterestAccounts, fetchAccountAnalytics, fetchAudienceInsights } from '../services/pinterest';
 import { useToast } from '@/hooks/use-toast';
 
 const Analytics = () => {

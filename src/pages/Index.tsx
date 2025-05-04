@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '../components/layout/Layout';
@@ -6,7 +5,7 @@ import AccountList from '../components/accounts/AccountList';
 import AddAccountModal from '../components/accounts/AddAccountModal';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { fetchPinterestAccounts, PinterestAccount } from '../services/pinterestApi';
+import { fetchPinterestAccounts, PinterestAccount } from '../services/pinterest';
 
 const Index = () => {
   const [accounts, setAccounts] = useState<PinterestAccount[]>([]);
