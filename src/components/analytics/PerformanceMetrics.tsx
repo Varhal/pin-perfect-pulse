@@ -11,13 +11,15 @@ interface Metric {
 
 interface PerformanceMetricsProps {
   metrics: Metric[];
+  dateRange?: string; // Add dateRange prop
 }
 
-const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics }) => {
+const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics, dateRange }) => {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Overall Performance</CardTitle>
+        {dateRange && <span className="text-sm text-muted-foreground">{dateRange}</span>}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
