@@ -7,7 +7,7 @@ export interface PinterestAccount {
   avatarUrl: string;
   apiKey: string;
   appId: string;
-  appSecret?: string;
+  appSecret?: string | null;
   refreshToken?: string | null;
   tokenExpiresAt?: string | null;
   impressions: {
