@@ -8,7 +8,10 @@ import {
 } from './mockHelpers';
 import { useToast } from '@/hooks/use-toast';
 
-export const fetchAccountAnalytics = async (accountId: string, dateRange?: { from: Date, to: Date }): Promise<PinterestAnalytics> => {
+export const fetchAccountAnalytics = async (
+  accountId: string, 
+  dateRange?: { from: Date; to: Date }
+): Promise<PinterestAnalytics> => {
   try {
     // Check if account exists
     const { data: account, error } = await supabase
@@ -34,7 +37,7 @@ export const fetchAccountAnalytics = async (accountId: string, dateRange?: { fro
       const { data: dbAnalytics, error: dbError } = await supabase.functions.invoke('pinterest-analytics', {
         body: {
           accountId,
-          endpoint: 'fetch_db_analytics',
+          endpoint: 'fetch_analytics',
           dateRange: {
             startDate,
             endDate
@@ -120,7 +123,8 @@ export const fetchAudienceInsights = async (accountId: string): Promise<Pinteres
       const { data: dbAudience, error: dbError } = await supabase.functions.invoke('pinterest-analytics', {
         body: {
           accountId,
-          endpoint: 'fetch_db_audience'
+          endpoint: 'fetch_audience',
+          cache: true
         }
       });
 

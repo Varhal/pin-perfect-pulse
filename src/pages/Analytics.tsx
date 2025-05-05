@@ -66,8 +66,15 @@ const Analytics = () => {
     const loadAnalyticsData = async () => {
       setIsLoading(true);
       try {
+        // Ensure we have both from and to dates for the analytics request
+        // If to date is missing, use current date
+        const dateRange = {
+          from: date?.from || subDays(new Date(), 30),
+          to: date?.to || new Date()
+        };
+        
         // Get analytics for the selected account
-        const metricsData = await fetchAccountAnalytics(selectedAccount, date);
+        const metricsData = await fetchAccountAnalytics(selectedAccount, dateRange);
         const insightsData = await fetchAudienceInsights(selectedAccount);
         
         setAggregatedData(metricsData);
@@ -164,8 +171,13 @@ const Analytics = () => {
     
     setIsLoading(true);
     try {
-      // Add date range to the requests
-      const metricsData = await fetchAccountAnalytics(selectedAccount, date);
+      // Ensure we have both from and to dates for the analytics request
+      const dateRange = {
+        from: date?.from || subDays(new Date(), 30),
+        to: date?.to || new Date()
+      };
+      
+      const metricsData = await fetchAccountAnalytics(selectedAccount, dateRange);
       const insightsData = await fetchAudienceInsights(selectedAccount);
       
       setAggregatedData(metricsData);
