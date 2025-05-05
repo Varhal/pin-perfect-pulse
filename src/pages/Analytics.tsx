@@ -67,7 +67,7 @@ const Analytics = () => {
       setIsLoading(true);
       try {
         // Get analytics for the selected account
-        const metricsData = await fetchAccountAnalytics(selectedAccount);
+        const metricsData = await fetchAccountAnalytics(selectedAccount, date);
         const insightsData = await fetchAudienceInsights(selectedAccount);
         
         setAggregatedData(metricsData);
@@ -154,7 +154,7 @@ const Analytics = () => {
     };
     
     loadAnalyticsData();
-  }, [selectedAccount, toast]);
+  }, [selectedAccount, date, toast]);
 
   // Refresh data with date range filter
   const handleRefreshData = async () => {
@@ -165,7 +165,7 @@ const Analytics = () => {
     setIsLoading(true);
     try {
       // Add date range to the requests
-      const metricsData = await fetchAccountAnalytics(selectedAccount);
+      const metricsData = await fetchAccountAnalytics(selectedAccount, date);
       const insightsData = await fetchAudienceInsights(selectedAccount);
       
       setAggregatedData(metricsData);

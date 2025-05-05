@@ -368,6 +368,186 @@ async function getProfileData(req, supabaseClient, accessToken) {
 }
 
 /**
+ * Отримує аналітичні дані з бази даних.
+ * @param req - Об'єкт HTTP запиту.
+ * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
+ * @param accountId - ID акаунта Pinterest.
+ * @param dateRange - Об'єкт з початковою та кінцевою датами для аналізу.
+ * @returns Аналітичні дані з бази даних у форматі JSON.
+ */
+async function fetchDbAnalytics(req, supabaseClient, accountId, dateRange) {
+  try {
+    const startDate = dateRange?.startDate || getDefaultStartDate();
+    const endDate = dateRange?.endDate || getCurrentDate();
+    
+    console.log(`Fetching analytics from database for account: ${accountId} from ${startDate} to ${endDate}`);
+    
+    const { data, error } = await supabaseClient
+      .from('pinterest_analytics')
+      .select('*')
+      .eq('account_id', accountId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching analytics from database:', error);
+      throw error;
+    }
+    
+    console.log(`Retrieved ${data?.length || 0} analytics records from database`);
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchDbAnalytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Отримує дані про аудиторію з бази даних.
+ * @param req - Об'єкт HTTP запиту.
+ * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
+ * @param accountId - ID акаунта Pinterest.
+ * @returns Дані про аудиторію з бази даних у форматі JSON.
+ */
+async function fetchDbAudience(req, supabaseClient, accountId) {
+  try {
+    console.log(`Fetching audience data from database for account: ${accountId}`);
+    
+    // Get the most recent audience record for this account
+    const { data, error } = await supabaseClient
+      .from('pinterest_audience')
+      .select('*')
+      .eq('account_id', accountId)
+      .order('date', { ascending: false })
+      .limit(1);
+    
+    if (error) {
+      console.error('Error fetching audience from database:', error);
+      throw error;
+    }
+    
+    console.log(`Got audience data from database`);
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error in fetchDbAudience:', error);
+    throw error;
+  }
+}
+
+/**
+ * Зберігає аналітичні дані в базі даних.
+ * @param req - Об'єкт HTTP запиту.
+ * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
+ * @param accountId - ID акаунта Pinterest.
+ * @param analyticsData - Аналітичні дані для збереження.
+ */
+async function storeAnalyticsData(req, supabaseClient, accountId, analyticsData) {
+  try {
+    if (!analyticsData || !Array.isArray(analyticsData.data) || analyticsData.data.length === 0) {
+      console.warn('No analytics data to store');
+      return;
+    }
+    
+    console.log(`Storing ${analyticsData.data.length} analytics records for account: ${accountId}`);
+    
+    // Transform API data to database format
+    const dbRecords = analyticsData.data.map(item => {
+      // Calculate rates
+      const impressions = item.metrics?.IMPRESSION || 0;
+      const engagements = item.metrics?.ENGAGEMENT || 0;
+      const pinClicks = item.metrics?.PIN_CLICK || 0;
+      const outboundClicks = item.metrics?.OUTBOUND_CLICK || 0;
+      const saves = item.metrics?.SAVE || 0;
+      const totalAudience = item.metrics?.TOTAL_AUDIENCE || 0;
+      
+      const engagementRate = impressions > 0 ? (engagements / impressions) * 100 : 0;
+      const pinClickRate = impressions > 0 ? (pinClicks / impressions) * 100 : 0;
+      const outboundClickRate = impressions > 0 ? (outboundClicks / impressions) * 100 : 0;
+      const saveRate = impressions > 0 ? (saves / impressions) * 100 : 0;
+      
+      return {
+        account_id: accountId,
+        date: item.date,
+        impressions: impressions,
+        engagements: engagements,
+        pin_clicks: pinClicks,
+        outbound_clicks: outboundClicks,
+        saves: saves,
+        total_audience: totalAudience,
+        engaged_audience: item.metrics?.ENGAGED_AUDIENCE || 0,
+        engagement_rate: engagementRate,
+        pin_click_rate: pinClickRate,
+        outbound_click_rate: outboundClickRate,
+        save_rate: saveRate
+      };
+    });
+    
+    // Upsert the analytics records
+    const { error } = await supabaseClient
+      .from('pinterest_analytics')
+      .upsert(dbRecords, { 
+        onConflict: 'account_id,date',
+        ignoreDuplicates: false
+      });
+    
+    if (error) {
+      console.error('Error storing analytics data:', error);
+      throw error;
+    }
+    
+    console.log('Successfully stored analytics data');
+  } catch (error) {
+    console.error('Error in storeAnalyticsData:', error);
+    throw error;
+  }
+}
+
+/**
+ * Зберігає дані про аудиторію в базі даних.
+ * @param req - Об'єкт HTTP запиту.
+ * @param supabaseClient - Клієнт Supabase для взаємодії з базою даних.
+ * @param accountId - ID акаунта Pinterest.
+ * @param audienceData - Дані про аудиторію для збереження.
+ */
+async function storeAudienceData(req, supabaseClient, accountId, audienceData) {
+  try {
+    if (!audienceData || !audienceData.data) {
+      console.warn('No audience data to store');
+      return;
+    }
+    
+    console.log(`Storing audience data for account: ${accountId}`);
+    
+    // Transform API data to database format
+    const dbRecord = {
+      account_id: accountId,
+      date: getCurrentDate(),
+      categories: JSON.stringify(audienceData.data.interests || []),
+      age_groups: JSON.stringify(audienceData.data.demographics?.age_groups || []),
+      genders: JSON.stringify(audienceData.data.demographics?.genders || []),
+      locations: JSON.stringify(audienceData.data.demographics?.locations || []),
+      devices: JSON.stringify(audienceData.data.demographics?.devices || [])
+    };
+    
+    // Insert the audience record
+    const { error } = await supabaseClient
+      .from('pinterest_audience')
+      .insert(dbRecord);
+    
+    if (error) {
+      console.error('Error storing audience data:', error);
+      throw error;
+    }
+    
+    console.log('Successfully stored audience data');
+  } catch (error) {
+    console.error('Error in storeAudienceData:', error);
+    throw error;
+  }
+}
+
+/**
  * Перевіряє, чи потрібно оновити токен
  * @param tokenExpiresAt Рядок дати ISO, коли закінчується термін дії токена
  * @returns boolean, що вказує, чи потрібно оновити токен
@@ -422,7 +602,7 @@ serve(async (req) => {
     const tokenExpiresAt = accountData.token_expires_at;
     // Переконайтеся, що у вас є 'ad_account_id' у вашій таблиці 'pinterest_accounts'
     const adAccountId = accountData.ad_account_id;
-    if (!adAccountId) {
+    if (!adAccountId && endpoint !== 'fetch_db_analytics' && endpoint !== 'fetch_db_audience') {
       throw new Error('ID рекламного акаунта обов\'язковий');
     }
 
@@ -451,8 +631,8 @@ serve(async (req) => {
       }
     }
 
-    // Перевірка наявності токена для використання
-    if (!accessToken) {
+    // Перевірка наявності токена для використання (крім запитів до БД)
+    if (!accessToken && !['fetch_db_analytics', 'fetch_db_audience'].includes(endpoint)) {
       throw new Error('Access токен для API Pinterest відсутній');
     }
 
@@ -466,15 +646,25 @@ serve(async (req) => {
             throw new Error('ID рекламного акаунта обов\'язковий для аналітики');
           }
           data = await getAnalyticsData(req, supabaseClient, accountId, accessToken, adAccountId, dateRange);
+          // Store analytics data in database
+          await storeAnalyticsData(req, supabaseClient, accountId, data);
           break;
         case 'audience':
           if (!adAccountId) {
             throw new Error('ID рекламного акаунта обов\'язковий для даних про аудиторію');
           }
           data = await getAudienceData(req, supabaseClient, accountId, accessToken, adAccountId);
+          // Store audience data in database
+          await storeAudienceData(req, supabaseClient, accountId, data);
           break;
         case 'profile':
           data = await getProfileData(req, supabaseClient, accessToken);
+          break;
+        case 'fetch_db_analytics':
+          data = await fetchDbAnalytics(req, supabaseClient, accountId, dateRange);
+          break;
+        case 'fetch_db_audience':
+          data = await fetchDbAudience(req, supabaseClient, accountId);
           break;
         default:
           throw new Error(`Неправильний endpoint: ${endpoint}`);
@@ -520,7 +710,8 @@ serve(async (req) => {
 // Допоміжні функції
 function getCurrentDate() {
   const today = new Date();
-  return today.toISOString().split('T')[0];}
+  return today.toISOString().split('T')[0];
+}
 
 function getDefaultStartDate() {
   const date = new Date();
