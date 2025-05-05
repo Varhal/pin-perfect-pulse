@@ -19,14 +19,6 @@ interface PerformanceMetricsProps {
 }
 
 const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics, dateRange }) => {
-  // Define colors consistent with Pinterest's brand
-  const colors = {
-    positive: '#27ae60', // Green for positive trends
-    negative: '#e60023', // Pinterest red for negative trends
-    neutral: '#6c757d',  // Gray for neutral trends
-    sparkline: '#e60023', // Pinterest red for sparklines
-  };
-  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -56,10 +48,10 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics, dateRa
                   <span 
                     className={`text-xs font-medium ${
                       metric.changeType === 'positive' 
-                        ? `text-[${colors.positive}]` 
+                        ? 'text-green-600' 
                         : metric.changeType === 'negative' 
-                          ? `text-[${colors.negative}]` 
-                          : `text-[${colors.neutral}]`
+                          ? 'text-red-600' 
+                          : 'text-gray-600'
                     }`}
                   >
                     {metric.changeType === 'positive' ? '↑' : metric.changeType === 'negative' ? '↓' : ''}
@@ -73,7 +65,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics, dateRa
                 <div className="h-8 mt-2">
                   <MiniChart 
                     data={metric.sparklineData}
-                    color={colors.sparkline}
+                    color="#e60023"
                   />
                 </div>
               )}

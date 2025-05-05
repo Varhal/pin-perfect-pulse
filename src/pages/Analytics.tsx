@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChartBar } from 'lucide-react';
+import { DateRange } from "react-day-picker";
+import { format, subDays } from "date-fns";
 
 const Analytics = () => {
   const [aggregatedData, setAggregatedData] = useState<any>(null);
@@ -18,8 +20,18 @@ const Analytics = () => {
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<any[]>([]);
-  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
   const { toast } = useToast();
+
+  // Formatting date range for display
+  const formattedDateRange = React.useMemo(() => {
+    if (!date?.from) return "Last 30 days";
+    if (!date.to) return `Since ${format(date.from, "MMM d, yyyy")}`;
+    return `${format(date.from, "MMM d")} - ${format(date.to, "MMM d, yyyy")}`;
+  }, [date]);
 
   // Fetch accounts on initial load
   useEffect(() => {
@@ -89,36 +101,42 @@ const Analytics = () => {
             value: formatNumber(calcTotal(metricsData.impressions)),
             change: randomChange(5, 15),
             changeType: 'positive' as const,
+            sparklineData: metricsData.impressions.map(item => ({ value: item.value })),
           },
           {
             label: 'Engagements',
             value: formatNumber(calcTotal(metricsData.engagements)),
             change: randomChange(7, 17),
             changeType: 'positive' as const,
+            sparklineData: metricsData.engagements.map(item => ({ value: item.value })),
           },
           {
             label: 'Pin clicks',
             value: formatNumber(calcTotal(metricsData.pinClicks)),
             change: randomChange(3, 12),
             changeType: 'positive' as const,
+            sparklineData: metricsData.pinClicks.map(item => ({ value: item.value })),
           },
           {
             label: 'Outbound clicks',
             value: formatNumber(calcTotal(metricsData.outboundClicks)),
             change: randomChange(4, 11),
             changeType: 'positive' as const,
+            sparklineData: metricsData.outboundClicks.map(item => ({ value: item.value })),
           },
           {
             label: 'Saves',
             value: formatNumber(calcTotal(metricsData.saves)),
             change: randomChange(8, 14),
             changeType: 'positive' as const,
+            sparklineData: metricsData.saves.map(item => ({ value: item.value })),
           },
           {
             label: 'Engaged audience',
             value: formatNumber(calcTotal(metricsData.engagedAudience)),
             change: randomChange(6, 10),
             changeType: 'positive' as const,
+            sparklineData: metricsData.engagedAudience.map(item => ({ value: item.value })),
           },
         ];
         
@@ -201,6 +219,11 @@ const Analytics = () => {
               </Select>
             )}
             
+            <DateRangePicker 
+              value={date} 
+              onChange={setDate} 
+            />
+            
             <Button 
               variant="outline" 
               onClick={handleRefreshData} 
@@ -233,7 +256,7 @@ const Analytics = () => {
           <>
             <PerformanceMetrics 
               metrics={performanceMetrics} 
-              dateRange={`Last 30 days`} 
+              dateRange={formattedDateRange} 
             />
             
             {aggregatedData && <MetricChart metrics={aggregatedData} />}
