@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -78,12 +77,9 @@ async function refreshPinterestToken(supabaseClient, accountId, refreshToken, ap
 async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adAccountId, dateRange) {
   // Використовуйте ad_account_id для API аналітики
   const apiUrl = `https://api.pinterest.com/v5/ad_accounts/${adAccountId}/analytics`;
-  const startDate = dateRange?.startDate || getDefaultStartDate();
-  const endDate = dateRange?.endDate || getCurrentDate();
-  
   const apiParams = {
-    start_date: startDate,
-    end_date: endDate,
+    start_date: dateRange?.startDate || getDefaultStartDate(),
+    end_date: dateRange?.endDate || getCurrentDate(),
     granularity: 'DAY',
     metric_types: [ // Змінено 'metrics' на 'metric_types'
       'IMPRESSION',
@@ -281,87 +277,15 @@ async function getAnalyticsData(req, supabaseClient, accountId, accessToken, adA
       }
       throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
-    
-    const apiData = await response.json();
-    
-    // Save analytics data to the database
-    await saveAnalyticsDataToDatabase(supabaseClient, accountId, apiData, startDate, endDate);
-    
-    return apiData;
+    const responseData = await response.json(); // Отримання JSON-даних
+    if (!responseData || !responseData.data || responseData.data.length === 0) { // Перевірка наявності даних
+      console.warn('API Pinterest повернув порожній набір даних');
+      return { data: [] }; // Повернення порожнього масиву, щоб уникнути помилки
+    }
+    return responseData;
   } catch (error) {
     console.error(`Помилка в getAnalyticsData: ${error.message}`);
     throw error;
-  }
-}
-
-/**
- * Зберігає аналітичні дані в базу даних
- * @param supabaseClient Клієнт Supabase
- * @param accountId ID акаунта Pinterest
- * @param apiData Дані з API Pinterest
- * @param startDate Початкова дата періоду
- * @param endDate Кінцева дата періоду
- */
-async function saveAnalyticsDataToDatabase(supabaseClient, accountId, apiData, startDate, endDate) {
-  try {
-    if (!apiData || !apiData.data || !Array.isArray(apiData.data)) {
-      console.warn('Немає даних для збереження в базу даних');
-      return;
-    }
-
-    // Process data by day
-    const analyticsRecords = apiData.data.map(dayData => {
-      const date = dayData.date || new Date().toISOString().split('T')[0];
-      
-      // Calculate metrics
-      const impressions = parseInt(dayData.metrics?.IMPRESSION || 0);
-      const engagements = parseInt(dayData.metrics?.ENGAGEMENT || 0);
-      const pinClicks = parseInt(dayData.metrics?.PIN_CLICK || 0);
-      const outboundClicks = parseInt(dayData.metrics?.OUTBOUND_CLICK || 0);
-      const saves = parseInt(dayData.metrics?.SAVE || 0);
-      const totalAudience = parseInt(dayData.metrics?.TOTAL_AUDIENCE || 0);
-      const engagedAudience = parseInt(dayData.metrics?.ENGAGED_AUDIENCE || 0);
-      
-      // Calculate rates
-      const engagementRate = impressions > 0 ? ((engagements / impressions) * 100).toFixed(2) : 0;
-      const pinClickRate = impressions > 0 ? ((pinClicks / impressions) * 100).toFixed(2) : 0;
-      const outboundClickRate = impressions > 0 ? ((outboundClicks / impressions) * 100).toFixed(2) : 0;
-      const saveRate = impressions > 0 ? ((saves / impressions) * 100).toFixed(2) : 0;
-      
-      return {
-        account_id: accountId,
-        date,
-        impressions,
-        engagements,
-        pin_clicks: pinClicks,
-        outbound_clicks: outboundClicks,
-        saves,
-        total_audience: totalAudience,
-        engaged_audience: engagedAudience,
-        engagement_rate: parseFloat(engagementRate),
-        pin_click_rate: parseFloat(pinClickRate),
-        outbound_click_rate: parseFloat(outboundClickRate),
-        save_rate: parseFloat(saveRate)
-      };
-    });
-    
-    // Upsert data to the database
-    if (analyticsRecords.length > 0) {
-      const { error } = await supabaseClient
-        .from('pinterest_analytics')
-        .upsert(analyticsRecords, { 
-          onConflict: 'account_id,date',
-          ignoreDuplicates: false
-        });
-        
-      if (error) {
-        console.error('Помилка збереження аналітичних даних:', error);
-      } else {
-        console.log(`Збережено ${analyticsRecords.length} записів аналітики для акаунта ${accountId}`);
-      }
-    }
-  } catch (error) {
-    console.error('Помилка в saveAnalyticsDataToDatabase:', error);
   }
 }
 
@@ -397,140 +321,15 @@ async function getAudienceData(req, supabaseClient, accountId, accessToken, adAc
       console.error('Помилка API Pinterest:', errorData);
       throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
-    
-    const apiData = await response.json();
-    
-    // Save audience data to the database
-    await saveAudienceDataToDatabase(supabaseClient, accountId, apiData);
-    
-    return apiData;
+    const responseData = await response.json(); // Отримання JSON-даних
+    if (!responseData || !responseData.data || responseData.data.length === 0) { // Перевірка наявності даних
+      console.warn('API Pinterest повернув порожній набір даних');
+      return { data: [] }; // Повернення порожнього масиву, щоб уникнути помилки
+    }
+    return responseData;
   } catch (error) {
     console.error(`Помилка в getAudienceData: ${error.message}`);
     throw error;
-  }
-}
-
-/**
- * Зберігає дані про аудиторію в базу даних
- * @param supabaseClient Клієнт Supabase
- * @param accountId ID акаунта Pinterest
- * @param apiData Дані з API Pinterest
- */
-async function saveAudienceDataToDatabase(supabaseClient, accountId, apiData) {
-  try {
-    if (!apiData || !apiData.items || !Array.isArray(apiData.items)) {
-      console.warn('Немає даних про аудиторію для збереження в базу даних');
-      return;
-    }
-
-    // Get current date as the snapshot date
-    const snapshotDate = new Date().toISOString().split('T')[0];
-    
-    // Process audience data
-    const categories = [];
-    const ageGroups = [];
-    const genders = [];
-    const locations = [];
-    const devices = [];
-    
-    // Process audience data from API response
-    apiData.items.forEach(audience => {
-      // Process categories/interests
-      if (audience.audience_type === 'INTEREST') {
-        categories.push({
-          name: audience.name,
-          percentage: parseFloat((Math.random() * 20 + 5).toFixed(2)) // Mock data for demonstration
-        });
-      }
-      
-      // Process demographics if available
-      if (audience.rule && audience.rule.demographic_rule) {
-        const demo = audience.rule.demographic_rule;
-        
-        // Age groups
-        if (demo.age_groups && Array.isArray(demo.age_groups)) {
-          demo.age_groups.forEach(age => {
-            ageGroups.push({
-              group: age,
-              percentage: parseFloat((Math.random() * 15 + 5).toFixed(2)) // Mock data
-            });
-          });
-        }
-        
-        // Genders
-        if (demo.genders && Array.isArray(demo.genders)) {
-          demo.genders.forEach(gender => {
-            genders.push({
-              group: gender,
-              percentage: gender === 'FEMALE' ? 65.5 : 34.5 // Mock data
-            });
-          });
-        }
-        
-        // Locations
-        if (demo.locations && Array.isArray(demo.locations)) {
-          demo.locations.forEach(location => {
-            locations.push({
-              country: location.name || location.country || 'Unknown',
-              percentage: parseFloat((Math.random() * 10 + 2).toFixed(2)) // Mock data
-            });
-          });
-        }
-      }
-    });
-    
-    // Add default device data if not present
-    if (devices.length === 0) {
-      devices.push(
-        { type: 'Mobile', percentage: 68.4 },
-        { type: 'Desktop', percentage: 27.3 },
-        { type: 'Tablet', percentage: 4.3 }
-      );
-    }
-    
-    // Create audience record
-    const audienceRecord = {
-      account_id: accountId,
-      date: snapshotDate,
-      categories: JSON.stringify(categories.slice(0, 5)), // Limit to top 5
-      age_groups: JSON.stringify(ageGroups.length > 0 ? ageGroups : [
-        { group: '18-24', percentage: 22.5 },
-        { group: '25-34', percentage: 33.7 },
-        { group: '35-44', percentage: 19.2 },
-        { group: '45-54', percentage: 13.5 },
-        { group: '55-64', percentage: 7.8 },
-        { group: '65+', percentage: 3.3 }
-      ]),
-      genders: JSON.stringify(genders.length > 0 ? genders : [
-        { group: 'FEMALE', percentage: 65.5 },
-        { group: 'MALE', percentage: 34.5 }
-      ]),
-      locations: JSON.stringify(locations.length > 0 ? locations.slice(0, 6) : [
-        { country: 'United States', percentage: 35.2 },
-        { country: 'United Kingdom', percentage: 12.8 },
-        { country: 'Canada', percentage: 9.5 },
-        { country: 'Australia', percentage: 7.3 },
-        { country: 'Germany', percentage: 6.4 },
-        { country: 'France', percentage: 5.1 }
-      ]),
-      devices: JSON.stringify(devices)
-    };
-    
-    // Upsert the audience data
-    const { error } = await supabaseClient
-      .from('pinterest_audience')
-      .upsert([audienceRecord], { 
-        onConflict: 'account_id,date',
-        ignoreDuplicates: false
-      });
-      
-    if (error) {
-      console.error('Помилка збереження даних про аудиторію:', error);
-    } else {
-      console.log(`Збережено дані про аудиторію для акаунта ${accountId} на дату ${snapshotDate}`);
-    }
-  } catch (error) {
-    console.error('Помилка в saveAudienceDataToDatabase:', error);
   }
 }
 
@@ -556,7 +355,12 @@ async function getProfileData(req, supabaseClient, accessToken) {
       console.error('Помилка API Pinterest:', errorData);
       throw new Error(`Помилка API Pinterest: ${response.status} - ${JSON.stringify(errorData)}`);
     }
-    return await response.json();
+    const responseData = await response.json();  // Отримання JSON
+    if (!responseData || !responseData.data) { // Перевірка наявності даних
+      console.warn('API Pinterest повернув порожній набір даних');
+      return {};
+    }
+    return responseData;
   } catch (error) {
     console.error(`Помилка в getProfileData: ${error.message}`);
     throw error;
@@ -672,33 +476,6 @@ serve(async (req) => {
         case 'profile':
           data = await getProfileData(req, supabaseClient, accessToken);
           break;
-        case 'fetch_db_analytics':
-          // Отримати дані аналітики з бази даних
-          const { data: analyticsData, error: analyticsError } = await supabaseClient
-            .from('pinterest_analytics')
-            .select('*')
-            .eq('account_id', accountId)
-            .order('date', { ascending: false });
-            
-          if (analyticsError) {
-            throw new Error(`Помилка отримання аналітики з БД: ${analyticsError.message}`);
-          }
-          data = analyticsData;
-          break;
-        case 'fetch_db_audience':
-          // Отримати дані про аудиторію з бази даних
-          const { data: audienceData, error: audienceError } = await supabaseClient
-            .from('pinterest_audience')
-            .select('*')
-            .eq('account_id', accountId)
-            .order('date', { ascending: false })
-            .limit(1);
-            
-          if (audienceError) {
-            throw new Error(`Помилка отримання даних про аудиторію з БД: ${audienceError.message}`);
-          }
-          data = audienceData.length > 0 ? audienceData[0] : null;
-          break;
         default:
           throw new Error(`Неправильний endpoint: ${endpoint}`);
       }
@@ -743,8 +520,7 @@ serve(async (req) => {
 // Допоміжні функції
 function getCurrentDate() {
   const today = new Date();
-  return today.toISOString().split('T')[0];
-}
+  return today.toISOString().split('T')[0];}
 
 function getDefaultStartDate() {
   const date = new Date();
