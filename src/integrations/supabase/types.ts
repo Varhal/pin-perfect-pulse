@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       pinterest_accounts: {
         Row: {
+          ad_account_id: string | null
           api_key: string
           app_id: string
           app_secret: string | null
@@ -25,6 +26,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          ad_account_id?: string | null
           api_key: string
           app_id: string
           app_secret?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           username: string
         }
         Update: {
+          ad_account_id?: string | null
           api_key?: string
           app_id?: string
           app_secret?: string | null
@@ -53,6 +56,118 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      pinterest_analytics: {
+        Row: {
+          account_id: string | null
+          created_at: string
+          date: string
+          engaged_audience: number
+          engagement_rate: number
+          engagements: number
+          id: string
+          impressions: number
+          outbound_click_rate: number
+          outbound_clicks: number
+          pin_click_rate: number
+          pin_clicks: number
+          save_rate: number
+          saves: number
+          total_audience: number
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string
+          date: string
+          engaged_audience?: number
+          engagement_rate?: number
+          engagements?: number
+          id?: string
+          impressions?: number
+          outbound_click_rate?: number
+          outbound_clicks?: number
+          pin_click_rate?: number
+          pin_clicks?: number
+          save_rate?: number
+          saves?: number
+          total_audience?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string
+          date?: string
+          engaged_audience?: number
+          engagement_rate?: number
+          engagements?: number
+          id?: string
+          impressions?: number
+          outbound_click_rate?: number
+          outbound_clicks?: number
+          pin_click_rate?: number
+          pin_clicks?: number
+          save_rate?: number
+          saves?: number
+          total_audience?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinterest_analytics_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "pinterest_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pinterest_audience: {
+        Row: {
+          account_id: string | null
+          age_groups: Json
+          categories: Json
+          created_at: string
+          date: string
+          devices: Json
+          genders: Json
+          id: string
+          locations: Json
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          age_groups?: Json
+          categories?: Json
+          created_at?: string
+          date: string
+          devices?: Json
+          genders?: Json
+          id?: string
+          locations?: Json
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          age_groups?: Json
+          categories?: Json
+          created_at?: string
+          date?: string
+          devices?: Json
+          genders?: Json
+          id?: string
+          locations?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinterest_audience_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "pinterest_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

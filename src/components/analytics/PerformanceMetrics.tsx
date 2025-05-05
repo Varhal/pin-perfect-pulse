@@ -1,45 +1,81 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
+import MiniChart from '../ui/MiniChart';
 
 interface Metric {
   label: string;
   value: string;
   change?: string;
   changeType?: 'positive' | 'negative' | 'neutral';
+  sparklineData?: { value: number }[];
 }
 
 interface PerformanceMetricsProps {
   metrics: Metric[];
-  dateRange?: string; // Add dateRange prop
+  dateRange?: string;
 }
 
 const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ metrics, dateRange }) => {
+  // Define colors consistent with Pinterest's brand
+  const colors = {
+    positive: '#27ae60', // Green for positive trends
+    negative: '#e60023', // Pinterest red for negative trends
+    neutral: '#6c757d',  // Gray for neutral trends
+    sparkline: '#e60023', // Pinterest red for sparklines
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Overall Performance</CardTitle>
+        <CardTitle className="text-lg flex items-center gap-2">
+          Overall Performance
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">Aggregate metrics from your Pinterest account</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardTitle>
         {dateRange && <span className="text-sm text-muted-foreground">{dateRange}</span>}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {metrics.map((metric, index) => (
-            <div key={index} className="space-y-1">
+            <div key={index} className="space-y-2">
               <p className="text-sm text-gray-500">{metric.label}</p>
               <p className="text-2xl font-bold">{metric.value}</p>
               {metric.change && (
-                <p 
-                  className={`text-xs ${
-                    metric.changeType === 'positive' 
-                      ? 'text-green-600' 
-                      : metric.changeType === 'negative' 
-                        ? 'text-red-600' 
-                        : 'text-gray-600'
-                  }`}
-                >
-                  {metric.changeType === 'positive' ? '↑' : metric.changeType === 'negative' ? '↓' : ''}
-                  {metric.change}
-                </p>
+                <div className="flex items-center space-x-1">
+                  <span 
+                    className={`text-xs font-medium ${
+                      metric.changeType === 'positive' 
+                        ? `text-[${colors.positive}]` 
+                        : metric.changeType === 'negative' 
+                          ? `text-[${colors.negative}]` 
+                          : `text-[${colors.neutral}]`
+                    }`}
+                  >
+                    {metric.changeType === 'positive' ? '↑' : metric.changeType === 'negative' ? '↓' : ''}
+                    {metric.change}
+                  </span>
+                  <span className="text-xs text-muted-foreground">vs. previous</span>
+                </div>
+              )}
+              
+              {metric.sparklineData && (
+                <div className="h-8 mt-2">
+                  <MiniChart 
+                    data={metric.sparklineData}
+                    color={colors.sparkline}
+                  />
+                </div>
               )}
             </div>
           ))}

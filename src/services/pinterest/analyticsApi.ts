@@ -27,7 +27,22 @@ export const fetchAccountAnalytics = async (accountId: string): Promise<Pinteres
     }
 
     try {
-      // Try to fetch real analytics data from Pinterest API
+      // First try to get data from our database
+      const { data: dbAnalytics, error: dbError } = await supabase.functions.invoke('pinterest-analytics', {
+        body: {
+          accountId,
+          endpoint: 'fetch_db_analytics'
+        }
+      });
+
+      if (dbError) {
+        console.error('Error fetching analytics from database:', dbError);
+      } else if (dbAnalytics && Array.isArray(dbAnalytics) && dbAnalytics.length > 0) {
+        console.log('Got analytics data from database:', dbAnalytics.length, 'records');
+        return transformDbDataToAnalytics(dbAnalytics);
+      }
+
+      // If no data in database, try to fetch and store from Pinterest API
       const { data: analyticsData, error: apiError } = await supabase.functions.invoke('pinterest-analytics', {
         body: {
           accountId,
@@ -90,7 +105,22 @@ export const fetchAudienceInsights = async (accountId: string): Promise<Pinteres
     }
 
     try {
-      // Try to fetch real audience insights data
+      // First try to get data from our database
+      const { data: dbAudience, error: dbError } = await supabase.functions.invoke('pinterest-analytics', {
+        body: {
+          accountId,
+          endpoint: 'fetch_db_audience'
+        }
+      });
+
+      if (dbError) {
+        console.error('Error fetching audience from database:', dbError);
+      } else if (dbAudience) {
+        console.log('Got audience data from database');
+        return transformDbDataToAudienceInsights(dbAudience);
+      }
+
+      // If no data in database, try to fetch and store from Pinterest API
       const { data: insightsData, error: apiError } = await supabase.functions.invoke('pinterest-analytics', {
         body: {
           accountId,
@@ -126,6 +156,64 @@ export const fetchAudienceInsights = async (accountId: string): Promise<Pinteres
     return generateMockAudienceInsights();
   }
 };
+
+// Transform database analytics records to our frontend analytics structure
+function transformDbDataToAnalytics(dbRecords: any[]): PinterestAnalytics {
+  // Group records by metric type and convert to PinterestMetricData format
+  const impressions: PinterestMetricData[] = [];
+  const engagements: PinterestMetricData[] = [];
+  const pinClicks: PinterestMetricData[] = [];
+  const outboundClicks: PinterestMetricData[] = [];
+  const saves: PinterestMetricData[] = [];
+  const totalAudience: PinterestMetricData[] = [];
+  const engagedAudience: PinterestMetricData[] = [];
+  
+  dbRecords.forEach(record => {
+    const date = record.date;
+    
+    impressions.push({ date, value: record.impressions });
+    engagements.push({ date, value: record.engagements });
+    pinClicks.push({ date, value: record.pin_clicks });
+    outboundClicks.push({ date, value: record.outbound_clicks });
+    saves.push({ date, value: record.saves });
+    totalAudience.push({ date, value: record.total_audience });
+    engagedAudience.push({ date, value: record.engaged_audience });
+  });
+  
+  // Sort data by date
+  const sortByDate = (a: PinterestMetricData, b: PinterestMetricData) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime();
+    
+  return {
+    impressions: impressions.sort(sortByDate),
+    engagements: engagements.sort(sortByDate),
+    pinClicks: pinClicks.sort(sortByDate),
+    outboundClicks: outboundClicks.sort(sortByDate),
+    saves: saves.sort(sortByDate),
+    totalAudience: totalAudience.sort(sortByDate),
+    engagedAudience: engagedAudience.sort(sortByDate)
+  };
+}
+
+// Transform database audience record to our frontend audience structure
+function transformDbDataToAudienceInsights(dbRecord: any): PinterestAudienceInsights {
+  if (!dbRecord) {
+    return generateMockAudienceInsights();
+  }
+  
+  try {
+    return {
+      categories: JSON.parse(dbRecord.categories || '[]'),
+      age: JSON.parse(dbRecord.age_groups || '[]'),
+      gender: JSON.parse(dbRecord.genders || '[]'),
+      locations: JSON.parse(dbRecord.locations || '[]'),
+      devices: JSON.parse(dbRecord.devices || '[]'),
+    };
+  } catch (e) {
+    console.error('Error parsing audience data from database:', e);
+    return generateMockAudienceInsights();
+  }
+}
 
 // Helper function
 function transformApiDataToMetricData(apiData: any, metricName: string): PinterestMetricData[] {
